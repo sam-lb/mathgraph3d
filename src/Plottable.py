@@ -24,15 +24,27 @@ class Plottable():
             for y in drange(h_start, h_stop + pn, pn):
                 try:
                     value = self.function(x, y);
-                    if isinstance(value, complex): continue;
-                    if isinstance(value, float):
+                    if isinstance(value, complex):
+                        continue;
+                    elif isinstance(value, float):
                         if self.min_value is None:
                             self.min_value = value;
                             self.max_value = value;
-                        if value > self.max_value: self.max_value = value;
-                        if value < self.min_value: self.min_value = value;
-                    if isinstance(value, tuple): point = value;
-                    else: point = (x, y, value);
+                        elif value > self.max_value:
+                            self.max_value = value;
+                        elif value < self.min_value:
+                            self.min_value = value;
+                        point = (x, y, value);
+                    elif isinstance(value, tuple):
+                        z = value[2];
+                        if self.min_value is None:
+                            self.min_value = z;
+                            self.max_value = z;
+                        elif z > self.max_value:
+                            self.max_value = z;
+                        elif z < self.min_value:
+                            self.min_value = z;
+                        point = value;
                     row.append(point);
                 except ZeroDivisionError:
                     pass;
