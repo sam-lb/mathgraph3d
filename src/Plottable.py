@@ -72,5 +72,5 @@ class Plottable():
         for poly in self.anchors:
             A, B, C, D = map(lambda p: self.plot.screen_point(*p), poly.points);
             if self.surf_on: self.plot.add_shape(poly.M, pygame.draw.polygon, self.plot.surface, poly.color, (A, B, C, D));
-            if self.mesh_on: self.plot.connect(poly.M, A, B, C, D, A, color=self.mesh_color, weight=self.mesh_weight);
+            if self.mesh_on: self.plot.add_shape(poly.M, pygame.draw.polygon, self.plot.surface, self.mesh_color, (A, B, C, D), self.mesh_weight);
             
