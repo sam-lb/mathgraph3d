@@ -74,7 +74,7 @@ class Plot():
         self.set_beta(self.beta + inc);
 
     def get_unit_vectors(self):
-        """ project the 3D unit vectors to the 2D plane. for an explanation visit http://sambrunacini.com/algorithms.html#grapher """
+        """ project the 3D unit vectors to the 2D plane. for an explanation visit http://sambrunacini.com/algorithms.html """
         self.x = Vector(cos(self.alpha), sin(self.alpha) * sin(self.beta));
         self.y = Vector(-sin(self.alpha), cos(self.alpha) * sin(self.beta));
         self.z = Vector(0, cos(self.beta));
