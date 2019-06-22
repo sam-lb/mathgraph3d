@@ -21,6 +21,7 @@ class Styles:
     VALUE_BASED = 5;
     VERTICAL_STRIPED = 6;
     HORIZONTAL_STRIPED = 7;
+    COLOR_SET = 8;
 
 
 class Gradient():
@@ -72,6 +73,8 @@ class ColorStyle():
         self.settings = kwargs;
         if self.style == Styles.GRADIENT:
             self.settings["gradient"] = Gradient(color1=self.settings["color1"], color2=self.settings["color2"]);
+        elif self.style == Styles.COLOR_SET:
+            self.settings["step"] = self.settings["step"] / 100;
 
     def checkerboard(self, kwargs):
         """ two colors in a checkerboard pattern """
@@ -112,6 +115,24 @@ class ColorStyle():
         """ stripes of color parallel to the x axis """
         if kwargs["j"] % 2: return self.settings["color1"];
         return self.settings["color2"];
+    
+    def color_set(self, kwargs):
+        """ A mapping of normalized function values to a set of colors in a dict. see http://sambrunacini.com/algorithms.html for details """
+        m=lambda cc:int(cc*0.8);
+        if kwargs["max_"] == kwargs["min_"]:
+            r, g, b = self.settings["color_set"][0];
+        else:
+            norm = kwargs["value"] / abs(kwargs["max_"]) if kwargs["value"] >= 0 else kwargs["value"] / abs(kwargs["min_"]);
+            low_interval = max(-1, min(1-self.settings["step"], norm - norm % self.settings["step"], 1));
+            high_interval = low_interval + self.settings["step"];
+            r1, g1, b1, r2, g2, b2 = *self.settings["color_set"][int(low_interval * 100)], *self.settings["color_set"][int(high_interval * 100)];
+            
+            range_val = abs((norm - low_interval) / (high_interval - low_interval));
+            r, g, b = r1 + (r2 - r1) * range_val, g1 + (g2 - g1) * range_val, b1 + (b2 - b1) * range_val;
+
+        if (kwargs["i"] + kwargs["j"]) % 2:
+            return m(r), m(g), m(b);
+        return r, g, b;
 
     def next_color(self, **kwargs):
         """ get the next color in the style """
@@ -131,6 +152,8 @@ class ColorStyle():
             return self.vertical_striped(kwargs);
         elif self.style == Styles.HORIZONTAL_STRIPED:
             return self.horizontal_striped(kwargs);
+        elif self.style == Styles.COLOR_SET:
+            return self.color_set(kwargs);
         
     def reset(self):
         """ reset the style """
@@ -165,4 +188,10 @@ preset_styles = {
     "cushion": ColorStyle(Styles.VALUE_BASED, base_color=(255, 100, 100)),
     
     "default": ColorStyle(Styles.SOLID, color=(255, 0, 0)),
+    
+    "rainbow": ColorStyle(Styles.COLOR_SET, color_set={100: (255, 0, 0), 50: (255, 128, 0), 0: (255, 255, 0), -50: (0, 255, 0), -100: (0, 0, 255)}, step=50),
+    "america": ColorStyle(Styles.COLOR_SET, color_set={100: (255, 255, 255), 50: (0, 0, 255), 0: (150, 0, 150), -50: (255, 0, 0), -100: (128, 128, 128)}, step=50),
+    "coral": ColorStyle(Styles.COLOR_SET, color_set={50: (126, 5, 180), 100: (8, 183, 165), -100: (54, 3, 125), 0: (217, 40, 220), -50: (216, 201, 227)}, step=50),
+    "cs-mermaid": ColorStyle(Styles.COLOR_SET, color_set={50: (222, 70, 175), 100: (151, 119, 201), -100: (83, 167, 8), 0: (160, 204, 64), -50: (87, 252, 240)}, step=50),
+    "random": ColorStyle(Styles.COLOR_SET, color_set={100: random_color(), 50: random_color(), 0: random_color(), -50: random_color(), -100: random_color()}, step=50),
 }
