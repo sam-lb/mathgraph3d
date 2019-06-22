@@ -6,7 +6,7 @@ def random_color():
     return randint(0, 255), randint(0, 255), randint(0, 255);
 
 def compress(x, desc=1.5, max_=255):
-    """ compresses an x value according to a logistic function. see http://sambrunacini.com/algorithms.html#grapher/ for details """
+    """ compresses an x value according to a logistic function. see http://sambrunacini.com/algorithms.html for details """
     z = max_ / (1 + math.e ** ((-1 / desc) * (x - 4 * desc)));
     return z;
 
