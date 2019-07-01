@@ -18,7 +18,7 @@ class PlotCreator(tk.Frame):
         tk.Frame.__init__(self, master, *args, **kwargs);
         self.master = master;
         self.master.title("3D Plotter");
-        self.master.iconbitmap("torus2.ico");
+        self.master.iconbitmap("img/torus2.ico");
         self.update_pending_msg = "NONE";
         self.extra_data = {};
 
@@ -100,7 +100,7 @@ class NewPlotWindow(tk.Toplevel):
         tk.Toplevel.__init__(self, parent);
         self.parent = parent;
         self.title(type_);
-        self.iconbitmap("torus2.ico");
+        self.iconbitmap("img/torus2.ico");
         self.type = type_;
 
         self.geometry("400x400+200+200");
