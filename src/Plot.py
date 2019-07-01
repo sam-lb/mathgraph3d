@@ -1,20 +1,25 @@
 from global_imports import *;
+from sympy import sympify;
 from Shapes import Shape;
+from Color import ColorStyle, Styles, preset_styles;
+from CartesianFunctions import Function2D, Function3D;
+from ParametricFunctions import ParametricFunctionT, ParametricFunctionUV, RevolutionSurface;
 
 
 class Plot():
 
     """ The environment to which all graphs are drawn and handled """
 
-    def __init__(self, surface, x_start=-4, x_stop=4, y_start=-4, y_stop=4, z_start=-4, z_stop=4, background=(255, 255, 255), axis_length=200,
-                 axes_on=True, angles_on=True, labels_on=True, cube_on=False, tracker_on=False, alpha=0.5, beta=0.8):
+    def __init__(self, surface, gui=None, x_start=-4, x_stop=4, y_start=-4, y_stop=4, z_start=-4, z_stop=4, background=(255, 255, 255), axis_length=200,
+                 axes_on=True, angles_on=True, labels_on=True, cube_on=False, tracker_on=False, spin=False, alpha=0.5, beta=0.8):
         self.surface = surface;
+        self.gui = gui;
         self.s_width, self.s_height = self.surface.get_width()//2, self.surface.get_height()//2;
         self.axis_length = axis_length;
         self.background = background;
         self.axes_on, self.angles_on = axes_on, angles_on;
         self.labels_on, self.cube_on = labels_on, cube_on;
-        self.tracker_on = tracker_on;
+        self.tracker_on, self.spin = tracker_on, spin;
         self.set_bounds(x_start, x_stop, y_start, y_stop, z_start, z_stop);
         self.functions, self.shapes = [], [];
         self.alpha, self.beta = alpha, beta;
@@ -74,7 +79,7 @@ class Plot():
         self.set_beta(self.beta + inc);
 
     def get_unit_vectors(self):
-        """ project the 3D unit vectors to the 2D plane. for an explanation visit http://sambrunacini.com/algorithms.html """
+        """ project the 3D unit vectors to the 2D plane. for an explanation visit http://sambrunacini.com/algorithms.html#projection """
         self.x = Vector(cos(self.alpha), sin(self.alpha) * sin(self.beta));
         self.y = Vector(-sin(self.alpha), cos(self.alpha) * sin(self.beta));
         self.z = Vector(0, cos(self.beta));
@@ -124,13 +129,15 @@ class Plot():
         self.add_shape(midpoint(c, g), pygame.draw.line, self.surface, color, C, G, weight);
         self.add_shape(midpoint(d, h), pygame.draw.line, self.surface, color, D, H, weight);
 
+        cs = ColorStyle(19);
+
         if filled:
-            self.add_shape(quad_midpoint(a, b, c, d), pygame.draw.polygon, self.surface, (255, 0, 0), (A, B, C, D));
-            self.add_shape(quad_midpoint(e, f, g, h), pygame.draw.polygon, self.surface, (0, 255, 0), (E, F, G, H));
-            self.add_shape(quad_midpoint(a, b, f, e), pygame.draw.polygon, self.surface, (0, 0, 255), (A, B, F, E));
-            self.add_shape(quad_midpoint(c, g, h, d), pygame.draw.polygon, self.surface, (255, 255, 0), (C, G, H, D));
-            self.add_shape(quad_midpoint(b, f, g, c), pygame.draw.polygon, self.surface, (0, 255, 255), (B, F, G, C));
-            self.add_shape(quad_midpoint(a, e, h, d), pygame.draw.polygon, self.surface, (255, 0, 255), (A, E, H, D));
+            self.add_shape(quad_midpoint(a, b, c, d), pygame.draw.polygon, self.surface, cs.next_color(min_=-4,max_=4,point=a), (A, B, C, D));
+            self.add_shape(quad_midpoint(e, f, g, h), pygame.draw.polygon, self.surface, cs.next_color(min_=-4,max_=4,point=b), (E, F, G, H));
+            self.add_shape(quad_midpoint(a, b, f, e), pygame.draw.polygon, self.surface, cs.next_color(min_=-4,max_=4,point=e), (A, B, F, E));
+            self.add_shape(quad_midpoint(c, g, h, d), pygame.draw.polygon, self.surface, cs.next_color(min_=-4,max_=4,point=f), (C, G, H, D));
+            self.add_shape(quad_midpoint(b, f, g, c), pygame.draw.polygon, self.surface, cs.next_color(min_=-4,max_=4,point=g), (B, F, G, C));
+            self.add_shape(quad_midpoint(a, e, h, d), pygame.draw.polygon, self.surface, cs.next_color(min_=-4,max_=4,point=h), (A, E, H, D));
 
     def cube(self, back_bottom_left, side, filled=True):
         """ draw a cube """
@@ -150,16 +157,11 @@ class Plot():
         p = 0.1;
 
         for x in drange(self.x_start, self.x_stop, p):
-            self.connect((x, 0, 0), self.screen_point(x, 0, 0), self.screen_point(x+p, 0, 0), color=(255, 0, 0), weight=3);
+            self.connect((x, 0, 0), self.screen_point(x, 0, 0), self.screen_point(x+p, 0, 0), color=(255, 0, 0), weight=2);
         for y in drange(self.y_start, self.y_stop, p):
-            self.connect((0, y, 0), self.screen_point(0, y, 0), self.screen_point(0, y+p, 0), color=(0, 255, 0), weight=3);
+            self.connect((0, y, 0), self.screen_point(0, y, 0), self.screen_point(0, y+p, 0), color=(0, 255, 0), weight=2);
         for z in drange(self.z_start, self.z_stop, p):
-            self.connect((0, 0, z), self.screen_point(0, 0, z), self.screen_point(0, 0, z+p), color=(0, 0, 255), weight=3);
-
-        if self.labels_on:
-            text("x", *self.screen_point(self.x_stop, 0, 0), self.surface, color=(255, 0, 0));
-            text("y", *self.screen_point(0, self.y_stop, 0), self.surface, color=(0, 255, 0));
-            text("z", *self.screen_point(0, 0, self.z_stop), self.surface, color=(0, 0, 255));
+            self.connect((0, 0, z), self.screen_point(0, 0, z), self.screen_point(0, 0, z+p), color=(0, 0, 255), weight=2);
 
     def draw_angles(self):
         """ show the angle values on the screen """
@@ -178,9 +180,9 @@ class Plot():
             try:
                 shape.draw();
             except TypeError as e:
-                pass;
-            except IndexError:
-                pass;
+                raise e;
+            except IndexError as e:
+                raise e;
 
     def zoom(self, f):
         """ zoom in or out by an amount f """
@@ -188,8 +190,78 @@ class Plot():
         self.needs_update = True;
         self.set_bounds(self.x_start, self.x_stop, self.y_start, self.y_stop, self.z_start, self.z_stop);
 
+    def get_color_style(self):
+        """ Produce a ColorStyle object from GUI data """
+        if self.gui.extra_data["plot type"] == "solid":
+            return ColorStyle(Styles.SOLID, color=self.gui.extra_data["fill color"]);
+        elif self.gui.extra_data["plot type"] == "checkerboard":
+            return ColorStyle(Styles.CHECKERBOARD, color1=self.gui.extra_data["color 1"], color2=self.gui.extra_data["color 2"]);
+        elif self.gui.extra_data["plot type"] == "gradient":
+            return ColorStyle(Styles.GRADIENT, color1=self.gui.extra_data["color 1"], color2=self.gui.extra_data["color 2"]);
+        elif self.gui.extra_data["plot type"] == "vertical striped":
+            return ColorStyle(Styles.VERTICAL_STRIPED, color1=self.gui.extra_data["color 1"], color2=self.gui.extra_data["color 2"]);
+        elif self.gui.extra_data["plot type"] == "horizontal striped":
+            return ColorStyle(Styles.HORIZONTAL_STRIPED, color1=self.gui.extra_data["color 1"], color2=self.gui.extra_data["color 2"]);
+        elif self.gui.extra_data["plot type"] == "world lighting":
+            return ColorStyle(Styles.WORLD_LIGHTING, base_color=self.gui.extra_data["base color"], light_source=(0, 0, 6));
+        elif self.gui.extra_data["plot type"] == "value based":
+            return ColorStyle(Styles.VALUE_BASED, base_color=self.gui.extra_data["base color"]);
+        elif self.gui.extra_data["plot type"] == "color set":
+            return ColorStyle(Styles.COLOR_SET, color_set={-100: self.gui.extra_data["color 1"], -50: self.gui.extra_data["color 2"],
+                                                           0: self.gui.extra_data["color 3"], 50: self.gui.extra_data["color 4"],
+                                                           100: self.gui.extra_data["color 5"]}, step=50)
+        else:
+            return preset_styles[self.gui.extra_data["plot type"]];
+
+    def handle_gui_msg(self):
+        """ Change the plot settings based on interaction with the GUI """
+        if self.gui.update_pending_msg == "NONE":
+            return;
+        if self.gui.update_pending_msg == "UPDATE_PLOT_SETTINGS":
+            self.set_bounds(self.gui.x_start.get(), self.gui.x_stop.get(), self.gui.y_start.get(),
+                            self.gui.y_stop.get(), self.gui.z_start.get(), self.gui.z_stop.get());
+        elif self.gui.update_pending_msg == "TOGGLE_AXES":
+            self.axes_on = not self.axes_on;
+            self.labels_on = not self.labels_on;
+        elif self.gui.update_pending_msg == "TOGGLE_ANGLES":
+            self.angles_on = not self.angles_on;
+        elif self.gui.update_pending_msg == "TOGGLE_TRACKER":
+            self.tracker_on = not self.tracker_on;
+        elif self.gui.update_pending_msg == "TOGGLE_SPIN":
+            self.spin = not self.spin;
+        elif self.gui.update_pending_msg == "RESET_PLOTS":
+            self.functions = [];
+        elif self.gui.update_pending_msg == "NEW_2D_FUNCTION":
+            func = self.gui.extra_data["function 1"];
+            Function2D(self, lambda x: float(sympify(func, {"x": x})), line_color_style=self.get_color_style());
+        elif self.gui.update_pending_msg == "NEW_3D_FUNCTION":
+            func = self.gui.extra_data["function 1"];
+            Function3D(self, lambda x, y: float(sympify(func, {"x": x, "y": y})), color_style=self.get_color_style());
+        elif self.gui.update_pending_msg == "NEW_PARAM1_FUNCTION":
+            func1 = self.gui.extra_data["function 1"];
+            func2 = self.gui.extra_data["function 2"];
+            func3 = self.gui.extra_data["function 3"];
+            print(self.gui.extra_data["fill color"]);
+            ParametricFunctionT(self, lambda t: (float(sympify(func1, {"t": t})), float(sympify(func2, {"t": t})), float(sympify(func3, {"t": t}))),
+                                line_color=self.gui.extra_data["fill color"]);
+        elif self.gui.update_pending_msg == "NEW_PARAM2_FUNCTION":
+            func1 = self.gui.extra_data["function 1"];
+            func2 = self.gui.extra_data["function 2"];
+            func3 = self.gui.extra_data["function 3"];
+            ParametricFunctionUV(self, lambda u, v: (float(sympify(func1, {"u": u, "v": v})), float(sympify(func2, {"u": u, "v": v})),
+                                                    float(sympify(func3, {"u": u, "v": v}))),
+                                color_style=self.get_color_style());
+        elif self.gui.update_pending_msg == "NEW_REVOLUTION_SURFACE":
+            func = self.gui.extra_data["function 1"];
+            RevolutionSurface(self, lambda x: float(sympify(func, {"x": x})), color_style=self.get_color_style(), surf_on=True);
+            
+        self.gui.update_pending_msg = "NONE";
+        self.gui.extra_data = {};
+        self.needs_update = True;
+
     def update(self):
         """ update all the graphs and everything in the plot """
+        if self.gui is not None: self.handle_gui_msg();
         if self.needs_update:
             self.surface.fill(self.background);
             self.get_unit_vectors();
@@ -199,10 +271,16 @@ class Plot():
             if self.angles_on: self.draw_angles();
             for f in self.functions:
                 f.draw();
+            
             self.draw_shapes();
             self.shapes = [];
+
+            if self.labels_on:
+                text("x", *self.screen_point(self.x_stop, 0, 0), self.surface, color=(255, 0, 0));
+                text("y", *self.screen_point(0, self.y_stop, 0), self.surface, color=(0, 255, 0));
+                text("z", *self.screen_point(0, 0, self.z_stop), self.surface, color=(0, 0, 255));
 
             self.needs_update = False;
             self.updates += 1;
         pygame.display.flip();
-
+        if self.spin: self.increment_alpha(0.025);
