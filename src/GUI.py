@@ -1,7 +1,7 @@
 import tkinter as tk;
 from Color import preset_styles;
 from pygame import Color;
-# don't need any of the global imports here.
+# we don't need any of the global imports here.
 
 
 
@@ -18,7 +18,7 @@ class PlotCreator(tk.Frame):
         tk.Frame.__init__(self, master, *args, **kwargs);
         self.master = master;
         self.master.title("3D Plotter");
-        self.master.iconbitmap("img/torus2.ico");
+        self.master.iconbitmap("torus2.ico");
         self.update_pending_msg = "NONE";
         self.extra_data = {};
 
@@ -87,8 +87,9 @@ class PlotCreator(tk.Frame):
 
         i = 0;
         for text, plot_type in [("New 2D plot", "2D plot"), ("New 3D plot", "3D plot"), ("New parametric function (1 parameter)", "parametric: 1 param"),
-                                ("New parametric function (2 parameters)", "parametric: 2 params"), ("New revolution surface", "revolution surface")]:
-            tk.Button(frame, text=text, command=lambda plot_type=plot_type: NewPlotWindow(self, plot_type)).grid(row=i, column=0, padx=10, pady=10);
+                                ("New parametric function (2 parameters)", "parametric: 2 params"), ("New revolution surface", "revolution surface"),
+                                ("New function of cylindrical coordinates", "cylindrical function"), ("New function of spherical coordinates", "spherical function")]:
+            tk.Button(frame, text=text, command=lambda plot_type=plot_type: NewPlotWindow(self, plot_type)).grid(row=i, column=0, padx=10, pady=5);
             i += 1;
         
 
@@ -100,22 +101,26 @@ class NewPlotWindow(tk.Toplevel):
         tk.Toplevel.__init__(self, parent);
         self.parent = parent;
         self.title(type_);
-        self.iconbitmap("img/torus2.ico");
+        self.iconbitmap("torus2.ico");
         self.type = type_;
 
         self.geometry("400x400+200+200");
         self.deiconify();
 
         if self.type == "2D plot":
-            self.plot2d();
+            self.set_up_configurations(["f(x)="], "NEW_2D_FUNCTION", solid_only=True);
         elif self.type == "3D plot":
-            self.plot3d();
+            self.set_up_configurations(["f(x,y)="], "NEW_3D_FUNCTION");
         elif self.type == "parametric: 1 param":
-            self.para1param();
+            self.set_up_configurations(["x(t)=", "y(t)=", "z(t)="], "NEW_PARAM1_FUNCTION", solid_only=True);
         elif self.type == "parametric: 2 params":
-            self.para2params();
+            self.set_up_configurations(["x(u,v)=", "y(u,v)=", "z(u,v)="], "NEW_PARAM2_FUNCTION");
         elif self.type == "revolution surface":
-            self.revsurf();
+            self.set_up_configurations(["f(x)="], "NEW_REVOLUTION_SURFACE");
+        elif self.type == "cylindrical function":
+            self.set_up_configurations(["r(z,t)="], "NEW_CYL_FUNCTION");
+        elif self.type == "spherical function":
+            self.set_up_configurations(["r(t,p)="], "NEW_SPH_FUNCTION");
 
     def add_data(self, name, data):
         """ add data to be broadcast to the plotter """
@@ -140,9 +145,12 @@ class NewPlotWindow(tk.Toplevel):
 
     def color_box(self, frame, row, text="Color: ", data_name="fill color"):
         """ create widgets for a color picker """
-        def on_color_select(cbox, canv):
+        def on_color_select(cbox, canv, ask=True):
             nonlocal self;
-            color = tk.colorchooser.askcolor(initialcolor="red",  parent=self)[1];
+            if ask: color = tk.colorchooser.askcolor(initialcolor="red",  parent=self)[1];
+            else: color="#ff0000";
+            if not color: return;
+            
             cbox.configure(text=color);
             canv.configure(background=color);
             self.add_data(data_name, Color(color)[0:3]);
@@ -152,6 +160,7 @@ class NewPlotWindow(tk.Toplevel):
         tk.Label(frame, text=text).grid(row=row);
         color_preview = tk.Canvas(frame, width=20, height=20);
         color_preview.grid(row=row, column=3);
+        on_color_select(color_box, color_preview, ask=False);
         tk.Button(frame, text="select color", command=lambda: on_color_select(color_box, color_preview)).grid(row=row, column=2);
 
     def color_style_set(self, frame, row):
@@ -198,32 +207,8 @@ class NewPlotWindow(tk.Toplevel):
         frame.grid(row=0, sticky=tk.W);
         return functions;
 
-    def plot2d(self):
-        """ Add a new 2D function """
-        self.color_style(row=1, solid_only=True);
-        strings = self.create_function_boxes(["f(x)="]);
-        tk.Button(self, text="Add to plot", command=lambda: self.on_complete({"function {}".format(i+1): strings[i].get() for i in range(len(strings))}, "NEW_2D_FUNCTION")).grid(row=2);
-
-    def plot3d(self):
-        """ Add a new 3D function """
-        self.color_style(row=1);
-        strings = self.create_function_boxes(["f(x,y)="]);
-        tk.Button(self, text="Add to plot", command=lambda: self.on_complete({"function {}".format(i+1): strings[i].get() for i in range(len(strings))}, "NEW_3D_FUNCTION")).grid(row=2);
-        
-    def para1param(self):
-        """ Add a new 1 parameter parametric function """
-        self.color_style(row=1, solid_only=True);
-        strings= self.create_function_boxes(["x(t)=", "y(t)=", "z(t)="]);
-        tk.Button(self, text="Add to plot", command=lambda: self.on_complete({"function {}".format(i+1): strings[i].get() for i in range(len(strings))}, "NEW_PARAM1_FUNCTION")).grid(row=2);
-
-    def para2params(self):
-        """ Add a new 2 parameter parametric function """
-        self.color_style(row=1);
-        strings = self.create_function_boxes(["x(u,v)=", "y(u,v)=", "z(u,v)="]);
-        tk.Button(self, text="Add to plot", command=lambda: self.on_complete({"function {}".format(i+1): strings[i].get() for i in range(len(strings))}, "NEW_PARAM2_FUNCTION")).grid(row=2);
-
-    def revsurf(self):
-        """ Add a new surface of revolution """
-        self.color_style(row=1);
-        strings = self.create_function_boxes(["f(x)="]);
-        tk.Button(self, text="Add to plot", command=lambda: self.on_complete({"function {}".format(i+1): strings[i].get() for i in range(len(strings))}, "NEW_REVOLUTION_SURFACE")).grid(row=2);
+    def set_up_configurations(self, function_boxes, broadcast_msg, solid_only=False):
+        """ Set up the widgets for adding a new function of any type """
+        self.color_style(row=1, solid_only=solid_only);
+        strings = self.create_function_boxes(function_boxes);
+        tk.Button(self, text="Add to plot", command=lambda: self.on_complete({"function {}".format(i+1): strings[i].get() for i in range(len(strings))}, broadcast_msg)).grid(row=2);
