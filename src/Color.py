@@ -36,6 +36,8 @@ class Gradient():
 
     def next_color(self):
         """ get the next color in the gradient """
+        if self.color1 == self.color2: return self.color1;
+        
         try:
             return next(self.gradient);
         except StopIteration:
