@@ -4,6 +4,7 @@ from Shapes import Shape;
 from Color import ColorStyle, Styles, preset_styles;
 from CartesianFunctions import Function2D, Function3D;
 from ParametricFunctions import ParametricFunctionT, ParametricFunctionUV, RevolutionSurface;
+from OtherCoordinateSystems import CylindricalFunction, SphericalFunction;
 
 
 class Plot():
@@ -254,6 +255,12 @@ class Plot():
         elif self.gui.update_pending_msg == "NEW_REVOLUTION_SURFACE":
             func = self.gui.extra_data["function 1"];
             RevolutionSurface(self, lambda x: float(sympify(func, {"x": x})), color_style=self.get_color_style(), surf_on=True);
+        elif self.gui.update_pending_msg == "NEW_CYL_FUNCTION":
+            func = self.gui.extra_data["function 1"];
+            CylindricalFunction(self, lambda z, t: float(sympify(func, {"z": z, "t": t})), color_style=self.get_color_style());
+        elif self.gui.update_pending_msg == "NEW_SPH_FUNCTION":
+            func = self.gui.extra_data["function 1"];
+            SphericalFunction(self, lambda t, p: float(sympify(func, {"t": t, "p": p})), color_style=self.get_color_style());
             
         self.gui.update_pending_msg = "NONE";
         self.gui.extra_data = {};
