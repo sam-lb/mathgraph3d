@@ -1,4 +1,7 @@
 # python-grapher
-Plots 3D and 2D functions with python and pygame
 
-Lots of information about this on my website: http://sambrunacini.com/
+python-grapher is 3D plotting software. The graphics are made with [pygame](https://github.com/pygame/pygame) and the GUI is made with [tkinter](https://wiki.python.org/moin/TkInter).
+
+It can plot 2D functions, 3D functions, 3D parametric lines, 3D parametric surfaces, revolution surfaces, functions of cylindrical coordinates, functions of spherical coordinates, and vector fields. It can also load and plot data from .csv files.
+
+There is lots of information about this on my website: http://sambrunacini.com/
