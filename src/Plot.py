@@ -1,10 +1,14 @@
 from global_imports import *;
-from sympy import sympify;
+from CAS.Parser import Parser;
+from CAS.Errors import UserError;
 from Shapes import Shape;
 from Color import ColorStyle, Styles, preset_styles;
 from CartesianFunctions import Function2D, Function3D;
 from ParametricFunctions import ParametricFunctionT, ParametricFunctionUV, RevolutionSurface;
+from VectorFunctions import VectorField;
 from OtherCoordinateSystems import CylindricalFunction, SphericalFunction;
+
+parser = Parser(ALLOWED_FUNCTIONS);
 
 
 class Plot():
@@ -52,7 +56,7 @@ class Plot():
         return x + self.s_width, self.s_height - y;
 
     def get_point_coordinates(self, x, y, z):
-        """ multiply the UNSCALED 3D coordinates by the projected unit vectors """
+        """ multiply the SCALED 3D coordinates by the projected unit vectors """
         return (x * self.x.x + y * self.y.x,
                 x * self.x.y + y * self.y.y + z * self.z.y);
 
@@ -118,7 +122,7 @@ class Plot():
             self.add_shape(M, pygame.draw.line, self.surface, color, points[i], points[i+1], weight);
         self.add_shape(M, pygame.draw.line, self.surface, color, points[-1], points[0], 1);
 
-    def __dcube(self, a, b, c, d, e, f, g, h, filled=False):
+    def __dcube(self, a, b, c, d, e, f, g, h):
         """ draw a cube with verticies a, b, ..., g, h """
         A, B, C, D, E, F, G, H = map(lambda p: self.screen_point(*p), (a, b, c, d, e, f, g, h));
         color = (0, 0, 0); weight = 1;
@@ -130,17 +134,7 @@ class Plot():
         self.add_shape(midpoint(c, g), pygame.draw.line, self.surface, color, C, G, weight);
         self.add_shape(midpoint(d, h), pygame.draw.line, self.surface, color, D, H, weight);
 
-        cs = ColorStyle(19);
-
-        if filled:
-            self.add_shape(quad_midpoint(a, b, c, d), pygame.draw.polygon, self.surface, cs.next_color(min_=-4,max_=4,point=a), (A, B, C, D));
-            self.add_shape(quad_midpoint(e, f, g, h), pygame.draw.polygon, self.surface, cs.next_color(min_=-4,max_=4,point=b), (E, F, G, H));
-            self.add_shape(quad_midpoint(a, b, f, e), pygame.draw.polygon, self.surface, cs.next_color(min_=-4,max_=4,point=e), (A, B, F, E));
-            self.add_shape(quad_midpoint(c, g, h, d), pygame.draw.polygon, self.surface, cs.next_color(min_=-4,max_=4,point=f), (C, G, H, D));
-            self.add_shape(quad_midpoint(b, f, g, c), pygame.draw.polygon, self.surface, cs.next_color(min_=-4,max_=4,point=g), (B, F, G, C));
-            self.add_shape(quad_midpoint(a, e, h, d), pygame.draw.polygon, self.surface, cs.next_color(min_=-4,max_=4,point=h), (A, E, H, D));
-
-    def cube(self, back_bottom_left, side, filled=True):
+    def cube(self, back_bottom_left, side):
         """ draw a cube """
         e = back_bottom_left;
         f = (e[0] + side, e[1], e[2]);
@@ -151,18 +145,18 @@ class Plot():
         b = (e[0] + side, e[1], e[2] + side);
         c = (e[0] + side, e[1] + side, e[2] + side);
         d = (e[0], e[1] + side, e[2] + side);
-        self.__dcube(a, b, c, d, e, f, g, h, filled);
+        self.__dcube(a, b, c, d, e, f, g, h);
 
     def draw_axes(self):
         """ draw the 3D axes """
         p = 0.1;
 
         for x in drange(self.x_start, self.x_stop, p):
-            self.connect((x, 0, 0), self.screen_point(x, 0, 0), self.screen_point(x+p, 0, 0), color=(255, 0, 0), weight=2);
+            self.connect((x, 0, 0), self.screen_point(x, 0, 0), self.screen_point(x+p, 0, 0), color=(255, 0, 0), weight=1);
         for y in drange(self.y_start, self.y_stop, p):
-            self.connect((0, y, 0), self.screen_point(0, y, 0), self.screen_point(0, y+p, 0), color=(0, 255, 0), weight=2);
+            self.connect((0, y, 0), self.screen_point(0, y, 0), self.screen_point(0, y+p, 0), color=(0, 255, 0), weight=1);
         for z in drange(self.z_start, self.z_stop, p):
-            self.connect((0, 0, z), self.screen_point(0, 0, z), self.screen_point(0, 0, z+p), color=(0, 0, 255), weight=2);
+            self.connect((0, 0, z), self.screen_point(0, 0, z), self.screen_point(0, 0, z+p), color=(0, 0, 255), weight=1);
 
     def draw_angles(self):
         """ show the angle values on the screen """
@@ -194,25 +188,43 @@ class Plot():
     def get_color_style(self):
         """ Produce a ColorStyle object from GUI data """
         if self.gui.extra_data["plot type"] == "solid":
-            return ColorStyle(Styles.SOLID, color=self.gui.extra_data["fill color"]);
+            return ColorStyle(Styles.SOLID, color=self.gui.extra_data["fill color"], apply_lighting=self.gui.extra_data.get("apply_lighting"), light_source=(0, 0, 6));
         elif self.gui.extra_data["plot type"] == "checkerboard":
-            return ColorStyle(Styles.CHECKERBOARD, color1=self.gui.extra_data["color 1"], color2=self.gui.extra_data["color 2"]);
+            return ColorStyle(Styles.CHECKERBOARD, color1=self.gui.extra_data["color 1"], color2=self.gui.extra_data["color 2"],
+                              apply_lighting=self.gui.extra_data.get("apply_lighting"), light_source=(0, 0, 6));
         elif self.gui.extra_data["plot type"] == "gradient":
-            return ColorStyle(Styles.GRADIENT, color1=self.gui.extra_data["color 1"], color2=self.gui.extra_data["color 2"]);
+            return ColorStyle(Styles.GRADIENT, color1=self.gui.extra_data["color 1"], color2=self.gui.extra_data["color 2"],
+                              apply_lighting=self.gui.extra_data.get("apply_lighting"), light_source=(0, 0, 6));
         elif self.gui.extra_data["plot type"] == "vertical striped":
-            return ColorStyle(Styles.VERTICAL_STRIPED, color1=self.gui.extra_data["color 1"], color2=self.gui.extra_data["color 2"]);
+            return ColorStyle(Styles.VERTICAL_STRIPED, color1=self.gui.extra_data["color 1"], color2=self.gui.extra_data["color 2"],
+                              apply_lighting=self.gui.extra_data.get("apply_lighting"), light_source=(0, 0, 6));
         elif self.gui.extra_data["plot type"] == "horizontal striped":
-            return ColorStyle(Styles.HORIZONTAL_STRIPED, color1=self.gui.extra_data["color 1"], color2=self.gui.extra_data["color 2"]);
-        elif self.gui.extra_data["plot type"] == "world lighting":
-            return ColorStyle(Styles.WORLD_LIGHTING, base_color=self.gui.extra_data["base color"], light_source=(0, 0, 6));
+            return ColorStyle(Styles.HORIZONTAL_STRIPED, color1=self.gui.extra_data["color 1"], color2=self.gui.extra_data["color 2"],
+                              apply_lighting=self.gui.extra_data.get("apply_lighting"), light_source=(0, 0, 6));
         elif self.gui.extra_data["plot type"] == "value based":
-            return ColorStyle(Styles.VALUE_BASED, base_color=self.gui.extra_data["base color"]);
+            return ColorStyle(Styles.VALUE_BASED, base_color=self.gui.extra_data["base color"], apply_lighting=self.gui.extra_data.get("apply_lighting"), light_source=(0, 0, 6));
         elif self.gui.extra_data["plot type"] == "color set":
             return ColorStyle(Styles.COLOR_SET, color_set={-100: self.gui.extra_data["color 1"], -50: self.gui.extra_data["color 2"],
                                                            0: self.gui.extra_data["color 3"], 50: self.gui.extra_data["color 4"],
-                                                           100: self.gui.extra_data["color 5"]}, step=50)
+                                                           100: self.gui.extra_data["color 5"]}, step=50,
+                              apply_lighting=self.gui.extra_data.get("apply_lighting"), light_source=(0, 0, 6));
         else:
-            return preset_styles[self.gui.extra_data["plot type"]];
+            style = preset_styles[self.gui.extra_data["plot type"]];
+            style.settings["apply_lighting"] = self.gui.extra_data.get("apply_lighting");
+            style.settings["light_source"] = (0, 0, 6);
+            return style;
+
+    def get_functions(self, symbols, num_functions):
+        """ get the functions from GUI input """
+        try:
+            parser.redefine_symbols(*symbols);
+            raw_functions = [self.gui.extra_data["function {}".format(i)] for i in range(1, num_functions + 1)];
+            parsed_functions = [parser.parse(func) for func in raw_functions];
+        except UserError as e:
+            self.gui.show_message("Plot failed due to invalid function(s)!", error=True);
+            return False;
+        self.gui.add_to_function_frame(", ".join(raw_functions));
+        return parsed_functions;
 
     def handle_gui_msg(self):
         """ Change the plot settings based on interaction with the GUI """
@@ -221,6 +233,13 @@ class Plot():
         if self.gui.update_pending_msg == "UPDATE_PLOT_SETTINGS":
             self.set_bounds(self.gui.x_start.get(), self.gui.x_stop.get(), self.gui.y_start.get(),
                             self.gui.y_stop.get(), self.gui.z_start.get(), self.gui.z_stop.get());
+            for function in self.functions:
+                if isinstance(function, Function3D):
+                    function.anchorize3D(function.x_anchors, function.y_anchors, self.x_start, self.x_stop, self.y_start, self.y_stop);
+                elif isinstance(function, RevolutionSurface):
+                    function.anchorize3D(function.x_anchors, function.y_anchors, 0, 2*pi, self.x_start, self.x_stop);
+                elif isinstance(function, VectorField):
+                    function.set_z_bounds(self.z_start, self.z_stop);
         elif self.gui.update_pending_msg == "TOGGLE_AXES":
             self.axes_on = not self.axes_on;
             self.labels_on = not self.labels_on;
@@ -230,37 +249,59 @@ class Plot():
             self.tracker_on = not self.tracker_on;
         elif self.gui.update_pending_msg == "TOGGLE_SPIN":
             self.spin = not self.spin;
+        elif self.gui.update_pending_msg == "TOGGLE_CUBE":
+            self.cube_on = not self.cube_on;
         elif self.gui.update_pending_msg == "RESET_PLOTS":
             self.functions = [];
+            self.gui.reset_function_frame();
+            
         elif self.gui.update_pending_msg == "NEW_2D_FUNCTION":
-            func = self.gui.extra_data["function 1"];
-            Function2D(self, lambda x: float(sympify(func, {"x": x})), line_color_style=self.get_color_style());
+            func = self.get_functions(["x"], 1);
+            if func:
+                func = func[0];
+                Function2D(self, lambda x: func.evaluate(x=x), line_color_style=self.get_color_style());
+            
         elif self.gui.update_pending_msg == "NEW_3D_FUNCTION":
-            func = self.gui.extra_data["function 1"];
-            Function3D(self, lambda x, y: float(sympify(func, {"x": x, "y": y})), color_style=self.get_color_style());
+            func = self.get_functions(["x", "y"], 1);
+            if func:
+                func = func[0];
+                Function3D(self, lambda x, y: func.evaluate(x=x, y=y), color_style=self.get_color_style());
+            
         elif self.gui.update_pending_msg == "NEW_PARAM1_FUNCTION":
-            func1 = self.gui.extra_data["function 1"];
-            func2 = self.gui.extra_data["function 2"];
-            func3 = self.gui.extra_data["function 3"];
-            print(self.gui.extra_data["fill color"]);
-            ParametricFunctionT(self, lambda t: (float(sympify(func1, {"t": t})), float(sympify(func2, {"t": t})), float(sympify(func3, {"t": t}))),
-                                line_color=self.gui.extra_data["fill color"]);
+            functions = self.get_functions(["t"], 3);
+            if functions:
+                func1, func2, func3 = functions;
+                ParametricFunctionT(self, lambda t: (func1.evaluate(t=t), func2.evaluate(t=t), func3.evaluate(t=t)), line_color=self.gui.extra_data["fill color"]);
+            
         elif self.gui.update_pending_msg == "NEW_PARAM2_FUNCTION":
-            func1 = self.gui.extra_data["function 1"];
-            func2 = self.gui.extra_data["function 2"];
-            func3 = self.gui.extra_data["function 3"];
-            ParametricFunctionUV(self, lambda u, v: (float(sympify(func1, {"u": u, "v": v})), float(sympify(func2, {"u": u, "v": v})),
-                                                    float(sympify(func3, {"u": u, "v": v}))),
-                                color_style=self.get_color_style());
+            functions = self.get_functions(["u", "v"], 3);
+            if functions:
+                func1, func2, func3 = functions;
+                ParametricFunctionUV(self, lambda u, v: (func1.evaluate(u=u, v=v), func2.evaluate(u=u, v=v), func3.evaluate(u=u, v=v)), color_style=self.get_color_style());
+            
         elif self.gui.update_pending_msg == "NEW_REVOLUTION_SURFACE":
-            func = self.gui.extra_data["function 1"];
-            RevolutionSurface(self, lambda x: float(sympify(func, {"x": x})), color_style=self.get_color_style(), surf_on=True);
+            func = self.get_functions(["x"], 1)[0];
+            if func:
+                func = func[0];
+                RevolutionSurface(self, lambda x: func.evaluate(x=x), color_style=self.get_color_style(), surf_on=True);
+            
         elif self.gui.update_pending_msg == "NEW_CYL_FUNCTION":
-            func = self.gui.extra_data["function 1"];
-            CylindricalFunction(self, lambda z, t: float(sympify(func, {"z": z, "t": t})), color_style=self.get_color_style());
+            func = self.get_functions(["z", "t"], 1);
+            if func:
+                func = func[0];
+                CylindricalFunction(self, lambda z, t: func.evaluate(z=z, t=t), color_style=self.get_color_style());
+            
         elif self.gui.update_pending_msg == "NEW_SPH_FUNCTION":
-            func = self.gui.extra_data["function 1"];
-            SphericalFunction(self, lambda t, p: float(sympify(func, {"t": t, "p": p})), color_style=self.get_color_style());
+            func = self.get_functions(["t", "p"], 1);
+            if func:
+                func = func[0];
+                SphericalFunction(self, lambda t, p: func.evaluate(t=t, p=p), color_style=self.get_color_style());
+
+        elif self.gui.update_pending_msg == "NEW_VECTOR_FIELD":
+            functions = self.get_functions(["x", "y", "z"], 3);
+            if functions:
+                func1, func2, func3 = functions;
+                VectorField(self, lambda x, y, z: (func1.evaluate(x=x, y=y, z=z), func2.evaluate(x=x, y=y, z=z), func3.evaluate(x=x, y=y, z=z)), color_style=self.get_color_style());
             
         self.gui.update_pending_msg = "NONE";
         self.gui.extra_data = {};
@@ -276,6 +317,7 @@ class Plot():
 
             if self.axes_on: self.draw_axes();
             if self.angles_on: self.draw_angles();
+            if self.cube_on: self.cube((self.x_start, self.y_start, self.z_start), self.units_x);
             for f in self.functions:
                 f.draw();
             
@@ -290,4 +332,4 @@ class Plot():
             self.needs_update = False;
             self.updates += 1;
         pygame.display.flip();
-        if self.spin: self.increment_alpha(0.025);
+        if self.spin: self.increment_alpha(0.01);
