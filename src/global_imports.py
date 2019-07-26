@@ -1,15 +1,26 @@
 import math, random, pygame;
 from math import sin, cos, tan, sqrt, hypot, pi;
 from random import randint;
+from decimal import Decimal;
 
 pygame.font.init();
 font = pygame.font.SysFont("arial", 32);
+
+ALLOWED_FUNCTIONS = {
+    "sin": sin, "cos": cos, "tan": tan, "sqrt": sqrt,
+    "floor": math.floor, "ceil": math.ceil, "abs": abs,
+    "arcsin": math.asin, "arccos": math.acos, "arctan": math.atan,
+    "max": lambda a, b: max(a, b), "min": lambda a, b: min(a, b),
+    "log": math.log, "exp": math.exp,
+}
 
 def drange(start, stop, step=1):
     """
     generator that returns an iterator between start and stop with any step value
     (not just an int). Similar in functionality to np.linspace(start, stop, num=(stop-start)/step)
     except it's an iterator so it doesn't return an np.array and it saves memory.
+
+    should NOT be used for anything that requires a high degree of accuracy!
     """
     yield start;
     if stop >= start:
@@ -20,6 +31,19 @@ def drange(start, stop, step=1):
         while (start + step) > stop:
             start += step;
             yield round(start, 2);
+
+def safe_drange(start, stop, step=1, precision=2):
+    """
+    drange, but somewhat safer (i.e. less lossy)
+    does not word if stop < start.
+    """
+    scaler = 10 ** precision;
+    start, stop = start * scaler, stop * scaler;
+    step = step * scaler;
+    
+    for i in range(int(start), int(stop), int(step)):
+        yield i / scaler;
+
 
 def sign(n):
     """ returns the sign of a number """
@@ -47,6 +71,18 @@ def quad_midpoint(A, B, C, D):
     """ calculate the center of a quadrilateral """
     return midpoint(midpoint(A, B), midpoint(C, D));
 
+def constrain(x, min_=0, max_=255):
+    """ constrain a number between two values """
+    return min(max_, max(min_, x));
+
+def slope(A, B):
+    """ calculate the slope between two points """
+    return (A[1] - B[1]) / (A[0] - B[0]);
+
+def sort_clockwise(*points):
+    """ sort points clockwise around the center point """
+    center = (sum((point[0] for point in points))/len(points), sum((point[1] for point in points))/len(points));
+    return sorted(points, key=lambda p: math.atan2(p[1]-center[1], p[0]-center[0]));
 
 class Vector():
 
