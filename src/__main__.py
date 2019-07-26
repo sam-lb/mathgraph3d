@@ -4,11 +4,14 @@ from global_imports import *;
 from Color import ColorStyle, Styles, Gradient, preset_styles, random_color;
 from CartesianFunctions import Function2D, Function3D;
 from ParametricFunctions import ParametricFunctionT, ParametricFunctionUV, RevolutionSurface;
+from VectorFunctions import VectorField;
+from StatisticalPlots import StatPlot2D, StatPlot3D;
+from OtherCoordinateSystems import CylindricalFunction, SphericalFunction;
 from Plot import Plot;
 from GUI import PlotCreator;
 
 
-WIDTH, HEIGHT = 800, 768;#682, 372;
+WIDTH, HEIGHT = 800, 768;
 HWIDTH, HHEIGHT = WIDTH // 2, HEIGHT // 2;
 GUI = True;
 
@@ -23,7 +26,7 @@ if __name__ == "__main__":
     if GUI:
         root = tk.Tk();
         embed = PlotCreator(root, width=WIDTH, height=HEIGHT);
-        embed.grid(row=0, column=0, rowspan=4, padx=10);
+        embed.grid(row=0, column=0, rowspan=6, padx=10);
         os.environ["SDL_WINDOWID"] = str(embed.winfo_id());
         root.protocol("WM_DELETE_WINDOW", on_close);
         root.update();
@@ -41,23 +44,6 @@ if __name__ == "__main__":
     else:
         plot = Plot(screen, axes_on=True, angles_on=True, labels_on=False, tracker_on=False, spin=False, alpha=0.5, beta=0.8,
                     x_start=-4, x_stop=4, y_start=-4, y_stop=4, z_start=-4, z_stop=4);
-
-##    Function2D(plot, lambda x: 2*sin(3*x/2), line_weight=2);
-##    Function3D(plot, lambda x, y: 2*sin(y), color_style=preset_styles["standard-lighting"]);
-##    ParametricFunctionT(plot, lambda t: (1, t, cos(t)*t));
-##    ParametricFunctionUV(plot, lambda u, v: (u + v, u - v, sin(u * v)), color_style=preset_styles["rainbow"],
-##                         u_start=-3, u_stop=3, v_start=-3, v_stop=3);
-##    RevolutionSurface(plot, lambda x: x**3/16, color_style=preset_styles["tmp"], surf_on=True);
-##    Function3D(plot, lambda x, y: 2 * sin(2 * math.exp(-(x+2)**2/2) * math.exp(-(y+2)**2/2)) + 2 * cos(3 * math.exp(-(x-2)**2) * math.exp(-(y-2)**2)) + 0.5 * sin(x) * cos(y),
-##               color_style=preset_styles["rainbow"], x_anchors=50, y_anchors=50, mesh_on=True, surf_on=True);
-##    Function3D(plot, lambda x, y: 2*sin(y)*cos(x+y), color_style=preset_styles["rainbow"]);
-##    Function3D(plot, lambda x, y: -(x**6+y**6)/1024+4,
-##               color_style=preset_styles["coral"]);
-##    ParametricFunctionUV(plot, lambda u, v: (4*cos(math.pi*u)*cos(math.pi/2*v),
-##                                         4*sin(math.pi*u)*cos(math.pi/2*v),
-##                                         4*sin(math.pi/2*v)),
-##                         color_style=preset_styles["rainbow"], mesh_on=True);
-
 
     
     while running:
@@ -88,8 +74,8 @@ if __name__ == "__main__":
                         plot.needs_update = True;
                 elif event.type == pygame.MOUSEMOTION:
                     if pygame.mouse.get_pressed()[0]:
-                        plot.increment_alpha(event.rel[0] / 10);
-                        plot.increment_beta(event.rel[1] / 20);
+                        plot.increment_alpha(event.rel[0] / 160);
+                        plot.increment_beta(event.rel[1] / 320);
                 elif event.type == pygame.VIDEORESIZE:
                     WIDTH, HEIGHT = event.w, event.h;
                     HWIDTH, HHEIGHT = WIDTH // 2, HEIGHT // 2;
