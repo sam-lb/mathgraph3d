@@ -10,7 +10,7 @@ Before you contribute, be sure to familiarize yourself with the code (or at leas
 # If you have questions, ask them.
 Raise an issue on the repo for any questions you have about contributing or about the grapher itself. Keep in mind that the goal of this project is to help people visualize mathematics! If you think a feature should be added, open an issue and write about it. Chances are, it will get added in soon enough. 
 
-If you don't want to raise an issue you can contact me at pythongrapheremail@gmail.com or create a doc [here](https://drive.google.com/drive/u/4/folders/1E4VxXe0bD2NowFURJvozEG6GVcCw9qis).
+If you don't want to raise an issue you can contact me at pythongrapheremail@gmail.com. I will not open any emails with attachments.
 
 
 \- Sam
