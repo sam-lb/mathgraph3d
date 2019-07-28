@@ -231,8 +231,8 @@ class Plot():
         if self.gui.update_pending_msg == "NONE":
             return;
         if self.gui.update_pending_msg == "UPDATE_PLOT_SETTINGS":
-            self.set_bounds(self.gui.x_start.get(), self.gui.x_stop.get(), self.gui.y_start.get(),
-                            self.gui.y_stop.get(), self.gui.z_start.get(), self.gui.z_stop.get());
+            self.set_bounds(self.gui.x_start, self.gui.x_stop, self.gui.y_start,
+                            self.gui.y_stop, self.gui.z_start, self.gui.z_stop);
             for function in self.functions:
                 if isinstance(function, Function3D):
                     function.anchorize3D(function.x_anchors, function.y_anchors, self.x_start, self.x_stop, self.y_start, self.y_stop);
