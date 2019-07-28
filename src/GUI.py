@@ -16,13 +16,17 @@ class PlotCreator(tk.Frame):
 
     """ A tkinter GUI for the grapher. allows user to create plots within the application """
 
-    def __init__(self, master, *args, **kwargs):
+    def __init__(self, master, *args, x_start=-4, x_stop=4, y_start=-4, y_stop=4, z_start=-4, z_stop=4, **kwargs):
         tk.Frame.__init__(self, master, *args, **kwargs);
         self.master = master;
         self.master.title("3D Plotter");
         #self.master.iconbitmap("img/torus2.ico");
         self.update_pending_msg = "NONE";
         self.extra_data = {};
+
+        self.x_start, self.x_stop = x_start, x_stop;
+        self.y_start, self.y_stop = y_start, y_stop;
+        self.z_start, self.z_stop = z_start, z_stop;
 
         self.create_widgets();
 
@@ -90,6 +94,10 @@ class PlotSettingsWindow(tk.Toplevel):
 
     def create_plot_bounds(self):
         """ create the widgets for plot bounds """
+        def onchange(event, name):
+            setattr(self.parent, name, int(event));
+            self.parent.broadcast_to_plotter("UPDATE_PLOT_SETTINGS");
+        
         frame = tk.Frame(self, borderwidth=3, relief="groove");
         frame.grid(row=0, column=0, padx=10, pady=10);
 
@@ -104,15 +112,13 @@ class PlotSettingsWindow(tk.Toplevel):
 
         for name, start, text, row, col in widget_data:
             from_, to = (-10, -1) if start else (1, 10);
-            widget = tk.Scale(frame, from_=from_, to=to, orient=tk.HORIZONTAL, command=lambda event: self.parent.broadcast_to_plotter("UPDATE_PLOT_SETTINGS"));
+            widget = tk.Scale(frame, from_=from_, to=to, orient=tk.HORIZONTAL, command=lambda event, name=name: onchange(event, name));
             label = tk.Label(frame, text=text);
             
             label.grid(row=row, column=col);
             widget.grid(row=row, column=col+1);
 
-            if start: widget.set(-4);
-            else: widget.set(4);
-            setattr(self.parent, name, widget);
+            widget.set(getattr(self.parent, name));
 
     def create_toggles(self):
         """ create toggle buttons for axes, angles, tracker, and spin """
@@ -174,7 +180,7 @@ class NewPlotWindow(tk.Toplevel):
             self.style.set("solid");
             self.color_style_set(dframe, row+1);
         else:
-            tk.OptionMenu(cs_frame, self.style, "solid", "checkerboard", "gradient", "value based",
+            tk.OptionMenu(cs_frame, self.style, "solid", "checkerboard", "gradient",
                           "vertical striped", "horizontal striped", "color set", "preset",
                           command=lambda event: self.color_style_set(dframe, row+1)).grid(row=1, sticky=tk.W);
 
