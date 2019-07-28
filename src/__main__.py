@@ -12,7 +12,6 @@ from GUI import PlotCreator;
 
 
 WIDTH, HEIGHT = 800, 768;
-HWIDTH, HHEIGHT = WIDTH // 2, HEIGHT // 2;
 GUI = True;
 
 
