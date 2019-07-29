@@ -2,7 +2,7 @@ Before you contribute, be sure to familiarize yourself with the code (or at leas
 
 # Anyone who knows python is welcome to contribute. If you do, make sure to follow these guidelines:
 - Use PEP 8 naming conventions. `ALL_CAPS_SEPARATED_BY_UNDERSCORES` for constants, `CamelCase` for classes, `snake_case` for functions and variable names.
-- Also try to make variable names descriptive. No one names unless it is an iteration variable or has obvious meaning (i.e. x, y, or z).
+- Also try to make variable names descriptive. No one letter names unless it is an iteration variable or has obvious meaning (i.e. x, y, or z).
 - Document! Write at least a simple docstring for each function, method, and class. If something you write uses a complicated algorithm or piece of math, please explain it! If it's necessary, I'll include it in my algorithm explanations page for this project (link above).
 - 4 space indents.
 - You don't really have to conform to any line length restrictions, but be reasonable about it. Always prefer shorter, clearer code over a big one line mess.
