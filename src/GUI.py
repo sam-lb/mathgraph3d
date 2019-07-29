@@ -167,8 +167,45 @@ class NewPlotWindow(tk.Toplevel):
         """ add data to be broadcast to the plotter """
         self.parent.extra_data[name] = data;
 
+    def light_source(self, row=0):
+        """ draw the widgets for light source configuring """
+        data = (
+            ("x", self.parent.x_start, self.parent.x_stop, "light_source_x", 0),
+            ("y", self.parent.y_start, self.parent.y_stop, "light_source_y", 0),
+            ("z", self.parent.z_start, self.parent.z_stop, "light_source_z", 6)
+        );
+
+        self.light_source_frame = tk.Frame(self, borderwidth=3, relief="groove");
+        self.light_source_frame.grid(row=row, sticky=tk.W);
+
+        tk.Label(self.light_source_frame, text="Light source position");
+        row = 1;
+        for text, from_, to, name, default in data:
+            start = min(-8, from_);
+            stop = max(8, to);
+            
+            widget = tk.Scale(self.light_source_frame, from_=start, to=stop, orient=tk.HORIZONTAL, command=lambda event, name=name: self.add_data(name, int(event)));
+            label = tk.Label(self.light_source_frame, text=text);
+            
+            label.grid(row=row);
+            widget.grid(row=row, column=1);
+            widget.set(default);
+            row += 1;
+
+    def destroy_light_source(self):
+        """ remove the widgets for light source configuring """
+        if hasattr(self, "light_source_frame"):
+            self.light_source_frame.destroy();
+
     def color_style(self, row=0, solid_only=False):
         """ Draw the widgets for ColorStyle configuring """
+        def on_check(lighting):
+            nonlocal row;
+            value = lighting.get();
+            self.add_data("apply_lighting", value);
+            if value: self.light_source(row+1);
+            else: self.destroy_light_source();
+        
         cs_frame = tk.Frame(self, borderwidth=3, relief="groove");
         dframe = tk.Frame(cs_frame);
         dframe.grid(row=2);
@@ -186,7 +223,7 @@ class NewPlotWindow(tk.Toplevel):
 
             lighting = tk.IntVar();
             tk.Checkbutton(cs_frame, text="Apply lighting", var=lighting,
-                           command=lambda lighting=lighting: self.add_data("apply_lighting", lighting.get())).grid(row=3, sticky=tk.W);
+                           command=lambda lighting=lighting: on_check(lighting)).grid(row=3, sticky=tk.W);
 
     def color_box(self, frame, row, text="Color: ", data_name="fill color"):
         """ create widgets for a color picker """
@@ -270,4 +307,4 @@ class NewPlotWindow(tk.Toplevel):
         
         strings = self.create_function_boxes(function_boxes, row=1);
         self.color_style(row=2, solid_only=solid_only);
-        tk.Button(self, text="Add to plot", command=lambda: self.on_complete({"function {}".format(i+1): strings[i].get() for i in range(len(strings))}, broadcast_msg)).grid(row=3);
+        tk.Button(self, text="Add to plot", command=lambda: self.on_complete({"function {}".format(i+1): strings[i].get() for i in range(len(strings))}, broadcast_msg)).grid(row=4);
