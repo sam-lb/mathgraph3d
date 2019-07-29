@@ -187,31 +187,35 @@ class Plot():
 
     def get_color_style(self):
         """ Produce a ColorStyle object from GUI data """
+        light_source = (self.gui.extra_data.get("light_source_x"),
+                        self.gui.extra_data.get("light_source_y"),
+                        self.gui.extra_data.get("light_source_z"));
+        
         if self.gui.extra_data["plot type"] == "solid":
-            return ColorStyle(Styles.SOLID, color=self.gui.extra_data["fill color"], apply_lighting=self.gui.extra_data.get("apply_lighting"), light_source=(0, 0, 6));
+            return ColorStyle(Styles.SOLID, color=self.gui.extra_data["fill color"], apply_lighting=self.gui.extra_data.get("apply_lighting"), light_source=light_source);
         elif self.gui.extra_data["plot type"] == "checkerboard":
             return ColorStyle(Styles.CHECKERBOARD, color1=self.gui.extra_data["color 1"], color2=self.gui.extra_data["color 2"],
-                              apply_lighting=self.gui.extra_data.get("apply_lighting"), light_source=(0, 0, 6));
+                              apply_lighting=self.gui.extra_data.get("apply_lighting"), light_source=light_source);
         elif self.gui.extra_data["plot type"] == "gradient":
             return ColorStyle(Styles.GRADIENT, color1=self.gui.extra_data["color 1"], color2=self.gui.extra_data["color 2"],
-                              apply_lighting=self.gui.extra_data.get("apply_lighting"), light_source=(0, 0, 6));
+                              apply_lighting=self.gui.extra_data.get("apply_lighting"), light_source=light_source);
         elif self.gui.extra_data["plot type"] == "vertical striped":
             return ColorStyle(Styles.VERTICAL_STRIPED, color1=self.gui.extra_data["color 1"], color2=self.gui.extra_data["color 2"],
-                              apply_lighting=self.gui.extra_data.get("apply_lighting"), light_source=(0, 0, 6));
+                              apply_lighting=self.gui.extra_data.get("apply_lighting"), light_source=light_source);
         elif self.gui.extra_data["plot type"] == "horizontal striped":
             return ColorStyle(Styles.HORIZONTAL_STRIPED, color1=self.gui.extra_data["color 1"], color2=self.gui.extra_data["color 2"],
-                              apply_lighting=self.gui.extra_data.get("apply_lighting"), light_source=(0, 0, 6));
+                              apply_lighting=self.gui.extra_data.get("apply_lighting"), light_source=light_source);
         elif self.gui.extra_data["plot type"] == "value based":
-            return ColorStyle(Styles.VALUE_BASED, base_color=self.gui.extra_data["base color"], apply_lighting=self.gui.extra_data.get("apply_lighting"), light_source=(0, 0, 6));
+            return ColorStyle(Styles.VALUE_BASED, base_color=self.gui.extra_data["base color"], apply_lighting=self.gui.extra_data.get("apply_lighting"), light_source=light_source);
         elif self.gui.extra_data["plot type"] == "color set":
             return ColorStyle(Styles.COLOR_SET, color_set={-100: self.gui.extra_data["color 1"], -50: self.gui.extra_data["color 2"],
                                                            0: self.gui.extra_data["color 3"], 50: self.gui.extra_data["color 4"],
                                                            100: self.gui.extra_data["color 5"]}, step=50,
-                              apply_lighting=self.gui.extra_data.get("apply_lighting"), light_source=(0, 0, 6));
+                              apply_lighting=self.gui.extra_data.get("apply_lighting"), light_source=light_source);
         else:
             style = preset_styles[self.gui.extra_data["plot type"]];
             style.settings["apply_lighting"] = self.gui.extra_data.get("apply_lighting");
-            style.settings["light_source"] = (0, 0, 6);
+            style.settings["light_source"] = light_source;
             return style;
 
     def get_functions(self, symbols, num_functions):
@@ -302,6 +306,8 @@ class Plot():
             if functions:
                 func1, func2, func3 = functions;
                 VectorField(self, lambda x, y, z: (func1.evaluate(x=x, y=y, z=z), func2.evaluate(x=x, y=y, z=z), func3.evaluate(x=x, y=y, z=z)), color_style=self.get_color_style());
+
+        print(self.gui.extra_data);
             
         self.gui.update_pending_msg = "NONE";
         self.gui.extra_data = {};
