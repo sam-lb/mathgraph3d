@@ -1,3 +1,2 @@
 pygame>=1.9.4
-https://github.com/sam-lb/CAS
-
+git+git://github.com/sam-lb/CAS@master
