@@ -284,7 +284,7 @@ class Plot():
                 ParametricFunctionUV(self, lambda u, v: (func1.evaluate(u=u, v=v), func2.evaluate(u=u, v=v), func3.evaluate(u=u, v=v)), color_style=self.get_color_style());
             
         elif self.gui.update_pending_msg == "NEW_REVOLUTION_SURFACE":
-            func = self.get_functions(["x"], 1)[0];
+            func = self.get_functions(["x"], 1);
             if func:
                 func = func[0];
                 RevolutionSurface(self, lambda x: func.evaluate(x=x), color_style=self.get_color_style(), surf_on=True);
