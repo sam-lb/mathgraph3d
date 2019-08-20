@@ -2,6 +2,7 @@ import tkinter as tk;
 from tkinter.colorchooser import askcolor;
 from tkinter.messagebox import showinfo;
 from Color import preset_styles;
+from CAS import Parser;
 from pygame import Color;
 # we don't need any of the global imports here.
 
@@ -73,6 +74,7 @@ class PlotCreator(tk.Frame):
                                 ("New vector field", "vector field")]:
             tk.Button(frame, text=text, command=lambda plot_type=plot_type: NewPlotWindow(self, plot_type)).grid(row=i, column=0, padx=10, pady=5);
             i += 1;
+        tk.Button(frame, text="Compile new function", command=lambda: DefineFunctionWindow(self)).grid(row=i, column=0, pady=5);
 
 
 class PlotSettingsWindow(tk.Toplevel):
@@ -97,7 +99,7 @@ class PlotSettingsWindow(tk.Toplevel):
         def onchange(event, name):
             setattr(self.parent, name, int(event));
             self.parent.broadcast_to_plotter("UPDATE_PLOT_SETTINGS");
-        
+
         frame = tk.Frame(self, borderwidth=3, relief="groove");
         frame.grid(row=0, column=0, padx=10, pady=10);
 
@@ -114,7 +116,7 @@ class PlotSettingsWindow(tk.Toplevel):
             from_, to = (-10, -1) if start else (1, 10);
             widget = tk.Scale(frame, from_=from_, to=to, orient=tk.HORIZONTAL, command=lambda event, name=name: onchange(event, name));
             label = tk.Label(frame, text=text);
-            
+
             label.grid(row=row, column=col);
             widget.grid(row=row, column=col+1);
 
@@ -130,7 +132,63 @@ class PlotSettingsWindow(tk.Toplevel):
             tk.Button(frame, text=text, command=lambda broadcast=broadcast: self.parent.broadcast_to_plotter(broadcast)).grid(row=0, column=i, padx=2);
             i += 1;
         frame.grid(row=1, column=0, pady=10, padx=10);
-        
+
+
+class DefineFunctionWindow(tk.Toplevel):
+
+    """ Window for defining a new function """
+
+    def __init__(self, parent):
+        tk.Toplevel.__init__(self, parent);
+        self.parent = parent;
+        self.title("Define a function");
+        #self.iconbitmap("img/torus2.ico")
+
+        self.geometry("400x400");
+        self.deiconify();
+        self.radio_btn_state = tk.IntVar();
+        self.radio_btn_state.initialize(1);
+        self.function_entry_state = tk.StringVar();
+        self.function_label_text = tk.StringVar(value="f(x)=");
+        self.function_name_state = tk.StringVar();
+        self.create_widgets();
+
+    def create_widgets(self):
+        """ add all widgets needed for the window """
+        self.msg = tk.StringVar(self, value="Define a new function");
+        tk.Label(self, textvariable=self.msg).grid(row=0, column=0);
+        tk.Radiobutton(self, text="one variable", variable=self.radio_btn_state, value=1, command=lambda: self.function_label_text.set("f(x)=")).grid(row=1, column=0);
+        tk.Radiobutton(self, text="two variables", variable=self.radio_btn_state, value=2, command=lambda: self.function_label_text.set("f(x,y)=")).grid(row=1, column=1);
+        tk.Radiobutton(self, text="three variables", variable=self.radio_btn_state, value=3, command=lambda: self.function_label_text.set("f(x,y,z)=")).grid(row=1, column=2);
+        tk.Label(self, text="Name: ").grid(row=2, column=0, sticky=tk.W);
+        tk.Entry(self, textvariable=self.function_name_state).grid(row=2, column=1, sticky=tk.W);
+        tk.Label(self, textvariable=self.function_label_text).grid(row=3, column=0, sticky=tk.W);
+        tk.Entry(self, textvariable=self.function_entry_state).grid(row=3, column=1, sticky=tk.W);
+        tk.Button(self, text="Add", command=self.on_close).grid(row=4, column=0, sticky=tk.W);
+
+    def on_close(self):
+        """ send data to the plotter and tell it a new function should be created. then destroy the window """
+        function = self.function_entry_state.get();
+        function_name = self.function_name_state.get();
+        rbtn_state = self.radio_btn_state.get();
+
+        if function and function_name:
+            self.add_data("function", function);
+            self.add_data("num vars", rbtn_state);
+            self.add_data("function name", function_name);
+            self.parent.broadcast_to_plotter("NEW_COMPILED_FUNCTION");
+            self.destroy();
+        else:
+            self.show_message("function box and name box cannot be blank", True);
+            return;
+
+    def add_data(self, name, data):
+        """ add data to be broadcast to the plotter """
+        self.parent.extra_data[name] = data;
+
+    def show_message(self, msg, error=False):
+        """ display a message to the user """
+        self.msg.set("Error: " * error + msg);
 
 class NewPlotWindow(tk.Toplevel):
 
@@ -183,10 +241,10 @@ class NewPlotWindow(tk.Toplevel):
         for text, from_, to, name, default in data:
             start = min(-8, from_);
             stop = max(8, to);
-            
+
             widget = tk.Scale(self.light_source_frame, from_=start, to=stop, orient=tk.HORIZONTAL, command=lambda event, name=name: self.add_data(name, int(event)));
             label = tk.Label(self.light_source_frame, text=text);
-            
+
             label.grid(row=row);
             widget.grid(row=row, column=1);
             widget.set(default);
@@ -205,13 +263,13 @@ class NewPlotWindow(tk.Toplevel):
             self.add_data("apply_lighting", value);
             if value: self.light_source(row+1);
             else: self.destroy_light_source();
-        
+
         cs_frame = tk.Frame(self, borderwidth=3, relief="groove");
         dframe = tk.Frame(cs_frame);
         dframe.grid(row=2);
         tk.Label(cs_frame, text="Color Style").grid(row=0, sticky=tk.W);
         cs_frame.grid(row=row, sticky=tk.W);
-        
+
         self.style = tk.StringVar(dframe, value="select...");
         if solid_only:
             self.style.set("solid");
@@ -232,11 +290,11 @@ class NewPlotWindow(tk.Toplevel):
             if ask: color = askcolor(initialcolor="red",  parent=self)[1];
             else: color="#ff0000";
             if not color: return;
-            
+
             cbox.configure(text=color);
             canv.configure(background=color);
             self.add_data(data_name, Color(color)[0:3]);
-            
+
         color_box = tk.Label(frame, text="#ff0000", borderwidth=3, relief="flat");
         color_box.grid(row=row, column=1);
         tk.Label(frame, text=text).grid(row=row);
@@ -278,7 +336,7 @@ class NewPlotWindow(tk.Toplevel):
             self.add_data(name, data_item);
         self.parent.broadcast_to_plotter(broadcast);
         self.destroy();
-        
+
     def create_function_boxes(self, labels, row=0):
         """ create the input boxes for the functions """
         frame = tk.Frame(self, borderwidth=3, relief="groove");
@@ -299,12 +357,12 @@ class NewPlotWindow(tk.Toplevel):
         """ Set up the widgets for adding a new function of any type """
         self.add_data("plot type", "solid");
         self.add_data("fill color", (255, 0, 0));
-        
+
         frame = tk.Frame(self, borderwidth=3, relief="groove");
         frame.grid(row=0, column=0);
         self.msg = tk.StringVar(frame, value="Add a graph to the plot");
         tk.Label(frame, textvariable=self.msg).grid(row=0);
-        
+
         strings = self.create_function_boxes(function_boxes, row=1);
         self.color_style(row=2, solid_only=solid_only);
         tk.Button(self, text="Add to plot", command=lambda: self.on_complete({"function {}".format(i+1): strings[i].get() for i in range(len(strings))}, broadcast_msg)).grid(row=4);

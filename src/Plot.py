@@ -49,6 +49,17 @@ class Plot():
         """ Add a function to be plotted """
         self.functions.append(function);
 
+    def compile_function(self, name, function, num_vars):
+        """ compile a function from a string and add it to the parser """
+        parser.redefine_symbols(*["x", "y", "z"][0:num_vars]);
+        tree = parser.parse(function);
+        if num_vars == 1:
+            parser.define_functions(**{name: lambda x: tree.evaluate(x=x)}); # had to break out some trickery here
+        elif num_vars == 2:
+            parser.define_functions(**{name: lambda x, y: tree.evaluate(x=x, y=y)});
+        else:
+            parser.define_functions(**{name: lambda x, y, z: tree.evaluate(x=x, y=y, z=z)});
+
     def scale(self, x, y, z):
         """ Scale a cartesian 3D point by the pixel scales """
         return x * self.x_scale, y * self.y_scale, z * self.z_scale;
@@ -115,7 +126,7 @@ class Plot():
             self.connect(self.sortbox, closest_corner, self.screen_point(x, 0, z));
             self.connect(self.sortbox, bot, self.screen_point(x, 0, 0));
             self.connect(self.sortbox, bot, self.screen_point(0, y, 0));
-            
+
             self.add_shape(self.sortbox, pygame.draw.circle, self.surface, (255, 0, 0), tuple(map(int, closest_corner)), 10);
 
     def connect(self, M, *points, color=(0, 0, 0), weight=1):
@@ -128,7 +139,7 @@ class Plot():
         """ draw a cube with verticies a, b, ..., g, h """
         A, B, C, D, E, F, G, H = map(lambda p: self.screen_point(*p), (a, b, c, d, e, f, g, h));
         color = (0, 0, 0); weight = 1;
-        
+
         self.connect(quad_midpoint(a, b, c, d), A, B, C, D, A);
         self.connect(quad_midpoint(e, f, g, h), E, F, G, H, E);
         self.add_shape(midpoint(a, e), pygame.draw.line, self.surface, color, A, E, weight);
@@ -142,7 +153,7 @@ class Plot():
         f = (e[0] + side, e[1], e[2]);
         g = (e[0] + side, e[1] + side, e[2]);
         h = (e[0], e[1] + side, e[2]);
-        
+
         a = (e[0], e[1], e[2] + side);
         b = (e[0] + side, e[1], e[2] + side);
         c = (e[0] + side, e[1] + side, e[2] + side);
@@ -157,7 +168,7 @@ class Plot():
         start = self.screen_point(start_point[0], start_point[1]-length, start_point[2]+length);
         stop = self.screen_point(start_point[0], start_point[1]+length, start_point[2]-length);
         self.add_shape(start_point, pygame.draw.line, self.surface, color, start, stop, 1)
-        
+
     def draw_axes(self):
         """ draw the 3D axes """
         p = 0.1;
@@ -195,7 +206,7 @@ class Plot():
         """ draw the shapes in the drawing queue """
         #self.shapes.sort(key=lambda s: self.proportion_distance3D_2(s.M, self.sortbox), reverse=True);
         self.shapes.sort(key=lambda s: distance3D(s.M, self.sortbox), reverse=True);
-        
+
         for shape in self.shapes:
             try:
                 shape.draw();
@@ -219,7 +230,7 @@ class Plot():
         light_source = (self.gui.extra_data.get("light_source_x"),
                         self.gui.extra_data.get("light_source_y"),
                         self.gui.extra_data.get("light_source_z"));
-        
+
         if self.gui.extra_data["plot type"] == "solid":
             return ColorStyle(Styles.SOLID, color=self.gui.extra_data["fill color"], apply_lighting=self.gui.extra_data.get("apply_lighting"), light_source=light_source);
         elif self.gui.extra_data["plot type"] == "checkerboard":
@@ -287,43 +298,45 @@ class Plot():
         elif self.gui.update_pending_msg == "RESET_PLOTS":
             self.functions = [];
             self.gui.reset_function_frame();
-            
+        elif self.gui.update_pending_msg == "NEW_COMPILED_FUNCTION":
+            self.compile_function(self.gui.extra_data["function name"], self.gui.extra_data["function"], self.gui.extra_data["num vars"]);
+
         elif self.gui.update_pending_msg == "NEW_2D_FUNCTION":
             func = self.get_functions(["x"], 1);
             if func:
                 func = func[0];
                 Function2D(self, lambda x: func.evaluate(x=x), line_color_style=self.get_color_style());
-            
+
         elif self.gui.update_pending_msg == "NEW_3D_FUNCTION":
             func = self.get_functions(["x", "y"], 1);
             if func:
                 func = func[0];
                 Function3D(self, lambda x, y: func.evaluate(x=x, y=y), color_style=self.get_color_style());
-            
+
         elif self.gui.update_pending_msg == "NEW_PARAM1_FUNCTION":
             functions = self.get_functions(["t"], 3);
             if functions:
                 func1, func2, func3 = functions;
                 ParametricFunctionT(self, lambda t: (func1.evaluate(t=t), func2.evaluate(t=t), func3.evaluate(t=t)), line_color=self.gui.extra_data["fill color"]);
-            
+
         elif self.gui.update_pending_msg == "NEW_PARAM2_FUNCTION":
             functions = self.get_functions(["u", "v"], 3);
             if functions:
                 func1, func2, func3 = functions;
                 ParametricFunctionUV(self, lambda u, v: (func1.evaluate(u=u, v=v), func2.evaluate(u=u, v=v), func3.evaluate(u=u, v=v)), color_style=self.get_color_style());
-            
+
         elif self.gui.update_pending_msg == "NEW_REVOLUTION_SURFACE":
             func = self.get_functions(["x"], 1);
             if func:
                 func = func[0];
                 RevolutionSurface(self, lambda x: func.evaluate(x=x), color_style=self.get_color_style(), surf_on=True);
-            
+
         elif self.gui.update_pending_msg == "NEW_CYL_FUNCTION":
             func = self.get_functions(["z", "t"], 1);
             if func:
                 func = func[0];
                 CylindricalFunction(self, lambda z, t: func.evaluate(z=z, t=t), color_style=self.get_color_style());
-            
+
         elif self.gui.update_pending_msg == "NEW_SPH_FUNCTION":
             func = self.get_functions(["t", "p"], 1);
             if func:
@@ -336,7 +349,7 @@ class Plot():
                 func1, func2, func3 = functions;
                 VectorField(self, lambda x, y, z: (func1.evaluate(x=x, y=y, z=z), func2.evaluate(x=x, y=y, z=z), func3.evaluate(x=x, y=y, z=z)), color_style=self.get_color_style());
 
-            
+
         self.gui.update_pending_msg = "NONE";
         self.gui.extra_data = {};
         self.needs_update = True;
@@ -359,7 +372,7 @@ class Plot():
             if self.cube_on: self.cube((self.x_start, self.y_start, self.z_start), self.units_x);
             for f in self.functions:
                 f.draw();
-            
+
             self.draw_shapes();
             self.shapes = [];
 

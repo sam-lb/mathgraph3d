@@ -26,6 +26,7 @@ class _StatPlot():
 
     def __init__(self, plot, file, color_style=preset_styles["default"]):
         self.plot = plot;
+        self.file_name = file;
         self.file = load_csv(file);
         self.color_style = color_style;
         self.get_data();
