@@ -44,7 +44,7 @@ class ParametricFunctionUV(Plottable):
         self.anchorize3D(u_anchors, v_anchors, u_start, u_stop, v_start, v_stop);
 
     def draw(self):
-        """ Place the funciton into the plot's drawing queue """
+        """ Place the function into the plot's drawing queue """
         self.draw3D();
 
 
@@ -52,7 +52,8 @@ class RevolutionSurface(ParametricFunctionUV):
 
     """ Plot a surface of revolution (surface obtained by rotating a 2D function about an axis """
 
-    def __init__(self, plot, function, color_style=preset_styles["default"], x_start=-4, x_stop=4, x_anchors=32,
+    def __init__(self, plot, function, color_style=preset_styles["default"], x_anchors=32,
                  y_anchors=32, mesh_on=True, surf_on=False, mesh_weight=1, mesh_color=(0, 0, 0)):
         func = lambda u, v: (u, function(u) * cos(v), function(u) * sin(v));
-        ParametricFunctionUV.__init__(self, plot, func, color_style, 0, 2 * pi, x_start, x_stop, x_anchors, y_anchors, mesh_on, surf_on, mesh_weight, mesh_color);
+        self.x_anchors, self.y_anchors = x_anchors, y_anchors;
+        ParametricFunctionUV.__init__(self, plot, func, color_style, 0, 2 * pi, plot.x_start, plot.x_stop, x_anchors, y_anchors, mesh_on, surf_on, mesh_weight, mesh_color);

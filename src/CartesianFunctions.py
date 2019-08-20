@@ -7,11 +7,8 @@ class CartesianFunction(Plottable):
 
     """ A function with Cartesian coordinates (directed distance x, y, z) """
 
-    def __init__(self, plot, function, color_style=preset_styles["default"], x_start=-4, x_stop=4, y_start=-4, y_stop=4):
+    def __init__(self, plot, function, color_style=preset_styles["default"]):
         Plottable.__init__(self, plot, function, color_style);
-
-        self.x_start, self.x_stop = x_start, x_stop;
-        self.y_start, self.y_stop = y_start, y_stop;
 
 
 class Function2D(CartesianFunction):
@@ -20,26 +17,26 @@ class Function2D(CartesianFunction):
 
     def __init__(self, plot, function, x_start=-4, x_stop=4, y_start=-4, y_stop=4, points_per_unit=100,
                  line_color_style=ColorStyle(Styles.SOLID, color=(0, 0, 0)), line_weight=1, detect_poles=True):
-        CartesianFunction.__init__(self, plot, function, line_color_style, x_start, x_stop, y_start, y_stop);
+        CartesianFunction.__init__(self, plot, function, line_color_style);
 
-        self.step = (self.x_stop - self.x_start) / points_per_unit;
+        self.step = (self.plot.x_stop - self.plot.x_start) / points_per_unit;
         self.line_weight = line_weight;
         self.detect_poles = detect_poles;
 
     def draw(self):
         """ add the function to the plot's drawing queue """
         prev_point = None;
-        for x in drange(self.x_start, self.x_stop + self.step, self.step):
+        for x in drange(self.plot.x_start, self.plot.x_stop + self.step, self.step):
             try:
                 y = complex(self.function(x));
-                if not self.y_start <= y.real <= self.y_stop:
+                if not self.plot.y_start <= y.real <= self.plot.y_stop:
                     prev_point = None;
                     continue;
                 point = x, y.real, y.imag;
             except ZeroDivisionError:
-                pass;
+                prev_point=None;
             except Exception as e:
-                print(e);
+                prev_point=None;
             else:
                 new_point = self.plot.screen_point(*point);
                 if prev_point is not None and ((self.detect_poles and abs(new_point[1]-prev_point[1]) < 40) or not self.detect_poles):
@@ -51,15 +48,15 @@ class Function3D(CartesianFunction):
 
     """ A 3D function of two variables x and y """
 
-    def __init__(self, plot, function, color_style=preset_styles["default"], x_start=-4, x_stop=4,
-                 y_start=-4, y_stop=4, x_anchors=32, y_anchors=32, mesh_on=True, surf_on=True,
+    def __init__(self, plot, function, color_style=preset_styles["default"], x_anchors=32, y_anchors=32, mesh_on=True, surf_on=True,
                  mesh_weight=1, mesh_color=(0, 0, 0), prism_plot=False, area_surface=lambda x, y: True):
         
-        CartesianFunction.__init__(self, plot, function, color_style, x_start, x_stop, y_start, y_stop);
+        CartesianFunction.__init__(self, plot, function, color_style);
 
         self.mesh_on, self.surf_on = mesh_on, surf_on;
         self.mesh_weight, self.mesh_color = mesh_weight, mesh_color;
-        self.anchorize3D(x_anchors, y_anchors, x_start, x_stop, y_start, y_stop);
+        self.anchorize3D(x_anchors, y_anchors, self.plot.x_start, self.plot.x_stop, self.plot.y_start, self.plot.y_stop);
+        self.x_anchors, self.y_anchors = x_anchors, y_anchors;
         self.prism_plot = prism_plot;
         self.area_surface = area_surface;
 
@@ -101,4 +98,4 @@ class Function3D(CartesianFunction):
     def draw(self):
         """ add the function to the plot's drawing queue """
         if self.prism_plot: self.plot_prisms();
-        self.draw3D()
+        self.draw3D();

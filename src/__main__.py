@@ -1,5 +1,5 @@
 import tkinter as tk;
-import os, sys;
+import os, sys, time;
 from global_imports import *;
 from Color import ColorStyle, Styles, Gradient, preset_styles, random_color;
 from CartesianFunctions import Function2D, Function3D;
@@ -11,17 +11,21 @@ from Plot import Plot;
 from GUI import PlotCreator;
 
 
-WIDTH, HEIGHT = 800, 768;
-GUI = True;
-
-
 def on_close():
     global running;
     running = False;
     root.destroy();
 
+def main():
+    WIDTH, HEIGHT = 800, 768;
+    GUI = True;
+    TESTING = False;
 
-if __name__ == "__main__":
+    def on_close():
+        nonlocal running;
+        running = False;
+        root.destroy();
+
     if GUI:
         root = tk.Tk();
         embed = PlotCreator(root, width=WIDTH, height=HEIGHT);
@@ -29,6 +33,8 @@ if __name__ == "__main__":
         os.environ["SDL_WINDOWID"] = str(embed.winfo_id());
         root.protocol("WM_DELETE_WINDOW", on_close);
         root.update();
+
+    loops, total_time = 0, 0;
     
     pygame.init();
     screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE);
@@ -44,18 +50,22 @@ if __name__ == "__main__":
         plot = Plot(screen, axes_on=True, angles_on=True, labels_on=False, tracker_on=False, spin=False, alpha=0.5, beta=0.8,
                     x_start=-4, x_stop=4, y_start=-4, y_stop=4, z_start=-4, z_stop=4);
 
-    
+##    f_x = lambda u, v: (3+sin(v)+cos(u))*cos(2*v);
+##    f_y = lambda u, v: (3+sin(v)+cos(u))*sin(2*v);
+##    f_z = lambda u, v: sin(u)+2*cos(v);
+##    ParametricFunctionUV(plot, lambda u, v: (f_x(u, v), f_y(u, v), f_z(u, v)), u_start=-math.pi, u_stop=math.pi, v_start=-math.pi, v_stop=math.pi, mesh_on=False, color_style=ColorStyle(Styles.SOLID, color=(255, 0, 0), apply_lighting=True, light_source=(0,0,6)), u_anchors=50, v_anchors=50);
+##    CylindricalFunction(plot, lambda z, t: z*sin(2*t), color_style=ColorStyle(Styles.GRADIENT, color1=(200, 100, 100), color2=(100, 100, 200)), z_anchors=70, mesh_on=False);
+##    Function3D(plot, lambda x, y: 2*(sin(x)+sin(y)), color_style=ColorStyle(Styles.CHECKERBOARD, color1=(200, 0, 50), color2=(255, 0, 255)), mesh_on=False);
+        
     while running:
+        initial_time = time.time();
         try:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False;
                     break;
                 elif event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_ESCAPE:
-                        running = False;
-                        break;
-                    elif event.key == pygame.K_r:
+                    if event.key == pygame.K_r:
                         plot.set_alpha(0.5);
                         plot.set_beta(0.8);
                     elif event.key == pygame.K_LEFT:
@@ -77,7 +87,6 @@ if __name__ == "__main__":
                         plot.increment_beta(event.rel[1] / 320);
                 elif event.type == pygame.VIDEORESIZE:
                     WIDTH, HEIGHT = event.w, event.h;
-                    HWIDTH, HHEIGHT = WIDTH // 2, HEIGHT // 2;
                     screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE);
                     plot.surface = screen;
                     plot.s_width, plot.s_height = screen.get_width()//2, screen.get_height()//2;
@@ -89,4 +98,24 @@ if __name__ == "__main__":
         except Exception as e:
             pygame.quit();
             raise e;
+        total_time += time.time() - initial_time;
+        loops += 1;
     pygame.quit();
+
+
+    if TESTING:
+        msg = "In __main__: without using DOUBLEBUF";
+        from performance_test import record;
+        
+        record(
+            {
+                "description": msg,
+                "total time": plot.time,
+                "total updates": plot.updates,
+                "average update time": plot.get_average_update_time(),
+                "average event loop time": loops / total_time
+            }
+        );
+
+if __name__ == "__main__":
+    main();

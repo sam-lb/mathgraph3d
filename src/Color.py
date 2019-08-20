@@ -6,7 +6,7 @@ def random_color():
     return randint(0, 255), randint(0, 255), randint(0, 255);
 
 def compress(x, desc=1.5, max_=255):
-    """ compresses an x value according to a logistic function. see http://sambrunacini.com/algorithms.html for details """
+    """ compresses an x value according to a logistic function. see http://sambrunacini.com/algorithms.html#grapher/ for details """
     z = max_ / (1 + math.e ** ((-1 / desc) * (x - 4 * desc)));
     return z;
 
@@ -15,13 +15,12 @@ class Styles:
     """ Contains the constants indicating which type of coloring to use """
     SOLID = 0;
     CHECKERBOARD = 1;
-    WORLD_LIGHTING = 2;
-    SCREEN_LIGHTING = 3;
-    GRADIENT = 4;
-    VALUE_BASED = 5;
-    VERTICAL_STRIPED = 6;
-    HORIZONTAL_STRIPED = 7;
-    COLOR_SET = 8;
+    SCREEN_LIGHTING = 2;
+    GRADIENT = 3;
+    VALUE_BASED = 4;
+    VERTICAL_STRIPED = 5;
+    HORIZONTAL_STRIPED = 6;
+    COLOR_SET = 7;
 
 
 class Gradient():
@@ -84,16 +83,15 @@ class ColorStyle():
             return self.settings["color1"];
         return self.settings["color2"];
 
-    def world_lighting(self, kwargs):
-        """ lighting from a source in world coordinates, i.e. one that moves with the graph """
+    def apply_lighting(self, color, kwargs):
+        """ apply lighting from a source in world coordinates, i.e. one that moves with the graph """
         point = kwargs["point"];
         distance = distance3D(point, self.settings["light_source"]);
         value = (255 - compress(distance, 1.5)) / 255;
-        color = self.settings["base_color"]() if callable(self.settings["base_color"]) else self.settings["base_color"];
-        return (value * color[0], value * color[1], value * color[2]);
+        return value * color[0], value * color[1], value * color[2];
 
     def gradient(self, kwargs):
-        """ lighting from a source in screen coordinates, i.e. stationary """
+        """ smooth gradient between two colors """
         m=lambda cc:int(cc*0.8);
         color = self.settings["gradient"].next_color();
         if (kwargs["i"] + kwargs["j"]) % 2:
@@ -106,7 +104,7 @@ class ColorStyle():
         if not val_range: return self.settings["base_color"];
         pct = abs(kwargs["value"] / val_range);
         r, g, b = self.settings["base_color"];
-        return (r * pct, g * pct, b * pct);
+        return (constrain(r * pct), constrain(g * pct), constrain(b * pct));
 
     def vertical_striped(self, kwargs):
         """ stripes of color parallel to the y axis """
@@ -117,9 +115,9 @@ class ColorStyle():
         """ stripes of color parallel to the x axis """
         if kwargs["j"] % 2: return self.settings["color1"];
         return self.settings["color2"];
-    
+
     def color_set(self, kwargs):
-        """ A mapping of normalized function values to a set of colors in a dict. see http://sambrunacini.com/algorithms.html for details """
+        """ A mapping of normalized function values to a set of colors in a dict """
         m=lambda cc:int(cc*0.8);
         if kwargs["max_"] == kwargs["min_"]:
             r, g, b = self.settings["color_set"][0];
@@ -139,31 +137,30 @@ class ColorStyle():
     def next_color(self, **kwargs):
         """ get the next color in the style """
         if self.style == Styles.SOLID:
-            return self.settings["color"];
+            color = self.settings["color"];
         elif self.style == Styles.CHECKERBOARD:
-            return self.checkerboard(kwargs);
-        elif self.style == Styles.WORLD_LIGHTING:
-            return self.world_lighting(kwargs);
+            color = self.checkerboard(kwargs);
         elif self.style == Styles.SCREEN_LIGHTING:
             pass;
         elif self.style == Styles.GRADIENT:
-            return self.gradient(kwargs);
+            color = self.gradient(kwargs);
         elif self.style == Styles.VALUE_BASED:
-            return self.value_based(kwargs);
+            color = self.value_based(kwargs);
         elif self.style == Styles.VERTICAL_STRIPED:
-            return self.vertical_striped(kwargs);
+            color = self.vertical_striped(kwargs);
         elif self.style == Styles.HORIZONTAL_STRIPED:
-            return self.horizontal_striped(kwargs);
+            color = self.horizontal_striped(kwargs);
         elif self.style == Styles.COLOR_SET:
-            return self.color_set(kwargs);
+            color = self.color_set(kwargs);
+
+        if not self.settings.get("apply_lighting"): # accounts for both cases: False/not provided
+            return color;
+        return self.apply_lighting(color, kwargs);
         
     def reset(self):
         """ reset the style """
         if self.style == Styles.GRADIENT:
             self.settings["gradient"] = Gradient(color1=self.settings["color1"], color2=self.settings["color2"]);
-        elif self.style == Styles.WORLD_LIGHTING and callable(self.settings["base_color"]):
-            grad = Gradient(c1,c2, 1/4);
-            self.settings["base_color"]=grad.next_color;
 
 
 preset_styles = {
@@ -174,9 +171,9 @@ preset_styles = {
     "golf": ColorStyle(Styles.GRADIENT, color1=(180, 160, 165), color2=(15, 180, 30)),
     "salamence": ColorStyle(Styles.GRADIENT, color1=(68, 171, 178), color2=(235, 90, 5)),
 
-    "standard-lighting": ColorStyle(Styles.WORLD_LIGHTING, light_source=(0, 0, 7), base_color=(255, 255, 255)),
-    "incandescent-lighting": ColorStyle(Styles.WORLD_LIGHTING, light_source=(0, 0, 6), base_color=(244, 200, 66)),
-    "overhead-lighting": ColorStyle(Styles.WORLD_LIGHTING, light_source=(2, 2, 4), base_color=(255, 0, 255)),
+    "standard-lighting": ColorStyle(Styles.SOLID, light_source=(0, 0, 7), apply_lighting=True, color=(255, 255, 255)),
+    "incandescent-lighting": ColorStyle(Styles.SOLID, light_source=(0, 0, 6), apply_lighting=True, color=(244, 200, 66)),
+    "overhead-lighting": ColorStyle(Styles.SOLID, light_source=(2, 2, 4), apply_lighting=True, color=(255, 0, 255)),
     
     "cool-blue": ColorStyle(Styles.CHECKERBOARD, color1=(0, 100, 100), color2=(0, 200, 200)),
     "comic-checker": ColorStyle(Styles.CHECKERBOARD, color1=(128, 0, 0), color2=(155, 155, 155)),
@@ -190,7 +187,7 @@ preset_styles = {
     "cushion": ColorStyle(Styles.VALUE_BASED, base_color=(255, 100, 100)),
     
     "default": ColorStyle(Styles.SOLID, color=(255, 0, 0)),
-    
+
     "rainbow": ColorStyle(Styles.COLOR_SET, color_set={100: (255, 0, 0), 50: (255, 128, 0), 0: (255, 255, 0), -50: (0, 255, 0), -100: (0, 0, 255)}, step=50),
     "america": ColorStyle(Styles.COLOR_SET, color_set={100: (255, 255, 255), 50: (0, 0, 255), 0: (150, 0, 150), -50: (255, 0, 0), -100: (128, 128, 128)}, step=50),
     "coral": ColorStyle(Styles.COLOR_SET, color_set={50: (126, 5, 180), 100: (8, 183, 165), -100: (54, 3, 125), 0: (217, 40, 220), -50: (216, 201, 227)}, step=50),

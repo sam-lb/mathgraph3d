@@ -8,6 +8,8 @@ from ParametricFunctions import ParametricFunctionT, ParametricFunctionUV, Revol
 from VectorFunctions import VectorField;
 from OtherCoordinateSystems import CylindricalFunction, SphericalFunction;
 
+import time;
+
 parser = Parser(ALLOWED_FUNCTIONS);
 
 
@@ -30,7 +32,7 @@ class Plot():
         self.alpha, self.beta = alpha, beta;
         self.get_unit_vectors();
         self.get_sortbox();
-        self.updates = 0;
+        self.updates, self.time = 0, 0;
         self.needs_update = True;
 
     def set_bounds(self, x_start, x_stop, y_start, y_stop, z_start, z_stop):
@@ -91,14 +93,14 @@ class Plot():
 
     def get_sortbox(self):
         """ gets the corner closest to the viewer to sort the polygons with """
-        if self.beta < 0: z = self.z_start;
-        else: z = self.z_stop;
-
         if 0 <= self.alpha < math.pi: x = self.x_start;
         else: x = self.x_stop;
 
         if math.pi / 2 <= self.alpha < 1.5 * math.pi: y = self.y_stop;
         else: y = self.y_start;
+
+        if self.beta < 0: z = self.z_start;
+        else: z = self.z_stop;
 
         self.sortbox = (x, y, z);
         if self.tracker_on:
@@ -147,6 +149,15 @@ class Plot():
         d = (e[0], e[1] + side, e[2] + side);
         self.__dcube(a, b, c, d, e, f, g, h);
 
+    def arrowhead(self, start_point, end_point, color):
+        length = 1 / 4;
+        start = self.screen_point(start_point[0], start_point[1]+length, start_point[2]+length);
+        stop = self.screen_point(start_point[0], start_point[1]-length, start_point[2]-length);
+        self.add_shape(start_point, pygame.draw.line, self.surface, color, start, stop, 1)
+        start = self.screen_point(start_point[0], start_point[1]-length, start_point[2]+length);
+        stop = self.screen_point(start_point[0], start_point[1]+length, start_point[2]-length);
+        self.add_shape(start_point, pygame.draw.line, self.surface, color, start, stop, 1)
+        
     def draw_axes(self):
         """ draw the 3D axes """
         p = 0.1;
@@ -158,6 +169,8 @@ class Plot():
         for z in drange(self.z_start, self.z_stop, p):
             self.connect((0, 0, z), self.screen_point(0, 0, z), self.screen_point(0, 0, z+p), color=(0, 0, 255), weight=1);
 
+        self.arrowhead((self.x_stop-0.5, 0, 0), (self.x_stop, 0,0), (255, 0, 0));
+
     def draw_angles(self):
         """ show the angle values on the screen """
         text("alpha: {}".format(self.alpha), 10, 10,self.surface,color=(0,0,0));
@@ -167,16 +180,32 @@ class Plot():
         """ add a shape to the drawing queue """
         self.shapes.append(Shape(M, shape, *args, **kwargs));
 
+    def proportion_distance3D(self, point1, point2):
+        """ dx^2 + dy^2 + dz^2. eliminates square root calculation, proportions are still correct """
+        return (point1[0] - point2[0]) ** 2 + (point1[1] - point2[1]) ** 2 + (point1[2] - point2[2]);
+
+    def proportion_distance3D_2(self, point1, point2):
+        """ proportion_distance3D but without exponentiation """
+        x = (point1[0] - point2[0]);
+        y = (point1[1] - point2[1]);
+        z = (point1[2] - point2[2]);
+        return x * x, y * y, z * z;
+
     def draw_shapes(self):
         """ draw the shapes in the drawing queue """
+        #self.shapes.sort(key=lambda s: self.proportion_distance3D_2(s.M, self.sortbox), reverse=True);
         self.shapes.sort(key=lambda s: distance3D(s.M, self.sortbox), reverse=True);
         
         for shape in self.shapes:
             try:
                 shape.draw();
+                #point = self.screen_point(*shape.M);
+                #pygame.draw.circle(self.surface, (0, 0, 0), (int(point[0]), int(point[1])), 2);
             except TypeError as e:
+                print("diamond");
                 raise e;
             except IndexError as e:
+                print("diamond 2");
                 raise e;
 
     def zoom(self, f):
@@ -307,16 +336,20 @@ class Plot():
                 func1, func2, func3 = functions;
                 VectorField(self, lambda x, y, z: (func1.evaluate(x=x, y=y, z=z), func2.evaluate(x=x, y=y, z=z), func3.evaluate(x=x, y=y, z=z)), color_style=self.get_color_style());
 
-        print(self.gui.extra_data);
             
         self.gui.update_pending_msg = "NONE";
         self.gui.extra_data = {};
         self.needs_update = True;
 
+    def get_average_update_time(self):
+        """ get the average time the plot has taken to update """
+        return self.time / self.updates;
+
     def update(self):
         """ update all the graphs and everything in the plot """
         if self.gui is not None: self.handle_gui_msg();
         if self.needs_update:
+            initial_time = time.time()
             self.surface.fill(self.background);
             self.get_unit_vectors();
             self.get_sortbox();
@@ -337,5 +370,6 @@ class Plot():
 
             self.needs_update = False;
             self.updates += 1;
+            self.time += time.time() - initial_time;
         pygame.display.flip();
         if self.spin: self.increment_alpha(0.01);

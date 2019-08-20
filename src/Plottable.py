@@ -1,5 +1,5 @@
 from global_imports import *;
-from Color import preset_styles;
+from Color import preset_styles, random_color;
 from Shapes import SubPolygon;
 
 class Plottable():
@@ -73,15 +73,8 @@ class Plottable():
                     M = quad_midpoint(A, B, C, D);
 
                     if self.max_value > self.plot.z_stop or self.min_value < self.plot.z_start:
-                        points = self.superclip((A, B, C, D));
-                        if points is None:
-                            continue;
-                        elif points[1]:
-                            points = points[0];
-                        else:
-                            points = self.subclip(points[0]);
-                        if points is None: continue;
-                        points = sort_clockwise(*points);
+                        points = self.super_sub_clip([A, B, C, D], self.plot.z_stop, self.plot.z_start);
+                        if len(points) == 0: continue;
                     else:
                         points = [A, B, C, D];
                                 
@@ -120,6 +113,41 @@ class Plottable():
             y = (constant - yb) / ym;
 
         return x, y, constant;
+
+    def sort_by_closest(self, point, points):
+        return sorted(points, key=lambda p: self.plot.proportion_distance3D_2(p, point));
+
+    def line_constant_intersection(self, in_point, out_point, constant=None):
+        return self.point_constant_intersection(in_point, out_point, constant);
+    
+    def super_sub_clip(self, points, z_top, z_bottom):
+        violation_points_a, violation_points_b = [], [];
+        valid_points, vertices = [], [];
+
+        for point in points:
+            if point[2] > z_top:
+                violation_points_a.append(point);
+            elif point[2] < z_bottom:
+                violation_points_b.append(point);
+            else:
+                valid_points.append(point);
+
+        if len(valid_points) == 0:
+            return [];
+        elif len(violation_points_a) + len(violation_points_b) == 0:
+            return sort_clockwise(*valid_points);
+
+        for point in violation_points_a:
+            closest_points = self.sort_by_closest(point, valid_points);
+            vertices.append(self.line_constant_intersection(closest_points[0], point, z_top));
+            if len(violation_points_a) == 1: vertices.append(self.line_constant_intersection(closest_points[1], point, z_top));
+
+        for point in violation_points_b:
+            closest_points = self.sort_by_closest(point, valid_points);
+            vertices.append(self.line_constant_intersection(closest_points[0], point, z_bottom));
+            if len(violation_points_b) == 1: vertices.append(self.line_constant_intersection(closest_points[1], point, z_bottom));
+
+        return sort_clockwise(*(vertices + valid_points));
 
     def superclip(self, points):
         """ clip the top off a graph that goes over the max z value """

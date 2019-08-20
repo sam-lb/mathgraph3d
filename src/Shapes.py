@@ -5,9 +5,9 @@ class SubPolygon():
 
     """ Stored in anchor lists. Contains all the necessary data for each polygon """
 
-    def __init__(self, color, A, B, C, D, M, i, j):
+    def __init__(self, color, points, M, i, j):
         self.color = color;
-        self.points = [A, B, C, D];
+        self.points = points;
         self.M = M;
         self.i, self.j = i, j;
 
@@ -23,3 +23,6 @@ class Shape():
     def draw(self):
         """ draw the shape to the screen """
         return self.shape(*self.args, **self.kwargs);
+
+    def __repr__(self):
+        return "Shape(shape={}, M={}, args={}, kwargs={}".format(self.shape, self.M, self.args, self.kwargs);
