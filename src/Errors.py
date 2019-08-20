@@ -1,0 +1,2 @@
+class GrapherError(Exception):
+    pass;
