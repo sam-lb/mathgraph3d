@@ -7,7 +7,7 @@ class VectorField(Plottable):
 
     """ 3D vector field """
 
-    def __init__(self, plot, function, vecs_per_unit=2, color_style=preset_styles["default"], z_start=-4, z_stop=4):
+    def __init__(self, plot, function, vecs_per_unit=1, color_style=preset_styles["default"], z_start=-4, z_stop=4):
         Plottable.__init__(self, plot, function, color_style);
         self.z_start, self.z_stop = z_start, z_stop;
         self.vecs_per_unit = vecs_per_unit;
@@ -16,7 +16,7 @@ class VectorField(Plottable):
     def set_z_bounds(self, start, stop):
         """ set the z bounds """
         self.z_start, self.z_stop = start, stop;
-        
+
     def draw_arrow(self, M, A, B, color, width=1):
         """ draw an arrow """
         dy, dx = A[1] - B[1], A[0] - B[0];
@@ -40,7 +40,7 @@ class VectorField(Plottable):
                         origin = self.plot.screen_point(x, y, z);
                         head = Vector(*self.function(x, y, z));
                         color = self.color_style.next_color(i=i, j=j, point=(x, y, z), min_=self.plot.z_start, max_=self.plot.z_stop, value=z);
-                        
+
                         proj_head = self.plot.screen_point(x + self.step * head.x / head.magnitude,
                                                            y + self.step * head.y / head.magnitude,
                                                            z + self.step * head.z / head.magnitude);

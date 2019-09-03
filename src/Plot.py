@@ -28,7 +28,7 @@ class Plot():
         self.labels_on, self.cube_on = labels_on, cube_on;
         self.tracker_on, self.spin = tracker_on, spin;
         self.set_bounds(x_start, x_stop, y_start, y_stop, z_start, z_stop);
-        self.functions, self.shapes = [], [];
+        self.functions, self.points, self.shapes = [], [], [];
         self.alpha, self.beta = alpha, beta;
         self.get_unit_vectors();
         self.get_sortbox();
@@ -160,7 +160,24 @@ class Plot():
         d = (e[0], e[1] + side, e[2] + side);
         self.__dcube(a, b, c, d, e, f, g, h);
 
+    def point(self, pos, color=(0, 255, 0), radius=0.2):
+        """ draw a point (diamond shaped) """
+        point = self.screen_point(*pos);
+        self.add_shape(pos, pygame.draw.circle, self.surface, color, (int(point[0]), int(point[1])), int(radius * self.x_scale));
+
+    def plane_from_3_points(self, A, B, C):
+        """ returns the function of the plane that contains A, B, and C unless they are colinear """
+        AB = (B[0] - A[0], B[1] - A[1], B[2] - A[2]);
+        AC = (C[0] - A[0], C[1] - A[1], C[2] - A[2]);
+        a = AB[1] * AC[2] - AB[2] * AC[1];
+        b = -(AB[0] * AC[2] - AB[2] * AC[0]);
+        c = AB[0] * AC[1] - AB[1] * AC[0];
+        x1, y1, z1 = A;
+        if c == 0: raise ValueError("Points are colinear");
+        return lambda x, y: z1 - (1 / c) * (a * (x - x1) + b * (y - y1));
+
     def arrowhead(self, start_point, end_point, color):
+        """ draw an arrowhead (under construction) """
         length = 1 / 4;
         start = self.screen_point(start_point[0], start_point[1]+length, start_point[2]+length);
         stop = self.screen_point(start_point[0], start_point[1]-length, start_point[2]-length);
@@ -186,6 +203,10 @@ class Plot():
         """ show the angle values on the screen """
         text("alpha: {}".format(self.alpha), 10, 10,self.surface,color=(0,0,0));
         text("beta: {}".format(self.beta), 10, 50,self.surface,color=(0,0,0));
+
+    def add_point(self, point):
+        """ add a point to the plot """
+        self.points.append(point);
 
     def add_shape(self, M, shape, *args, **kwargs):
         """ add a shape to the drawing queue """
@@ -369,9 +390,12 @@ class Plot():
 
             if self.axes_on: self.draw_axes();
             if self.angles_on: self.draw_angles();
+            
             if self.cube_on: self.cube((self.x_start, self.y_start, self.z_start), self.units_x);
             for f in self.functions:
                 f.draw();
+            for p in self.points:
+                self.point(p);
 
             self.draw_shapes();
             self.shapes = [];

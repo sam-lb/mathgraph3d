@@ -14,6 +14,10 @@ ALLOWED_FUNCTIONS = {
     "log": math.log, "exp": math.exp,
 }
 
+TWO_PI = 2 * pi;
+HALF_PI = pi / 2;
+QUARTER_PI = pi / 4;
+
 def drange(start, stop, step=1):
     """
     generator that returns an iterator between start and stop with any step value
@@ -35,7 +39,7 @@ def drange(start, stop, step=1):
 def safe_drange(start, stop, step=1, precision=2):
     """
     drange, but somewhat safer (i.e. less lossy)
-    does not word if stop < start.
+    does not work if stop < start.
     """
     scaler = 10 ** precision;
     start, stop = start * scaler, stop * scaler;

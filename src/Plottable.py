@@ -2,6 +2,7 @@ from global_imports import *;
 from Color import preset_styles, random_color;
 from Shapes import SubPolygon;
 
+
 class Plottable():
 
     """ Base class for any function plot that is drawn to the screen (not stat plot) """
@@ -89,8 +90,12 @@ class Plottable():
 
                     color = self.color_style.next_color(i=i, j=j, point=M, min_=self.min_value, max_=self.max_value, value=M[2]);
                     polys.append(SubPolygon(color, points, M, i, j));
+                    #pygame.display.update(pygame.draw.polygon(self.plot.surface, (255, 255, 255), list(map(lambda p: self.plot.screen_point(*p), points)), 1));
+                    #pygame.time.delay(50);
                 except IndexError as e:
                     pass;
+                
+        polys = tuple(polys);
         return polys;
 
     def point_constant_intersection(self, in_point, out_point, constant=None):
