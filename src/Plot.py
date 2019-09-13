@@ -18,7 +18,8 @@ class Plot():
     """ The environment to which all graphs are drawn and handled """
 
     def __init__(self, surface, gui=None, x_start=-4, x_stop=4, y_start=-4, y_stop=4, z_start=-4, z_stop=4, background=(255, 255, 255), axis_length=200,
-                 axes_on=True, angles_on=True, labels_on=True, cube_on=False, tracker_on=False, spin=False, alpha=0.5, beta=0.8):
+                 axes_on=True, angles_on=True, labels_on=True, cube_on=False, tracker_on=False, spin=False, line_numbers=False, ticks=False, alpha=0.5, beta=0.8,
+                 axis_weight=2, line_number_freq=2, x_axis_color=(255, 0, 0), y_axis_color=(0, 255, 0), z_axis_color=(0, 0, 255)):
         self.surface = surface;
         self.gui = gui;
         self.s_width, self.s_height = self.surface.get_width()//2, self.surface.get_height()//2;
@@ -27,12 +28,16 @@ class Plot():
         self.axes_on, self.angles_on = axes_on, angles_on;
         self.labels_on, self.cube_on = labels_on, cube_on;
         self.tracker_on, self.spin = tracker_on, spin;
+        self.line_numbers, self.line_number_freq = line_numbers, line_number_freq;
+        self.ticks = ticks;
         self.set_bounds(x_start, x_stop, y_start, y_stop, z_start, z_stop);
         self.functions, self.points, self.shapes = [], [], [];
         self.alpha, self.beta = alpha, beta;
         self.get_unit_vectors();
         self.get_sortbox();
         self.updates, self.time = 0, 0;
+        self.axis_weight = axis_weight;
+        self.x_axis_color, self.y_axis_color, self.z_axis_color = x_axis_color, y_axis_color, z_axis_color;
         self.needs_update = True;
 
     def set_bounds(self, x_start, x_stop, y_start, y_stop, z_start, z_stop):
@@ -48,6 +53,7 @@ class Plot():
     def add_function(self, function):
         """ Add a function to be plotted """
         self.functions.append(function);
+        self.needs_update = True;
 
     def compile_function(self, name, function, num_vars):
         """ compile a function from a string and add it to the parser """
@@ -161,7 +167,7 @@ class Plot():
         self.__dcube(a, b, c, d, e, f, g, h);
 
     def point(self, pos, color=(0, 255, 0), radius=0.2):
-        """ draw a point (diamond shaped) """
+        """ draw a point """
         point = self.screen_point(*pos);
         self.add_shape(pos, pygame.draw.circle, self.surface, color, (int(point[0]), int(point[1])), int(radius * self.x_scale));
 
@@ -173,6 +179,7 @@ class Plot():
         b = -(AB[0] * AC[2] - AB[2] * AC[0]);
         c = AB[0] * AC[1] - AB[1] * AC[0];
         x1, y1, z1 = A;
+##        print("{}(x-{}) + {}(y-{}) + {}(z-{})".format(a, x1, b, y1, c, z1));
         if c == 0: raise ValueError("Points are colinear");
         return lambda x, y: z1 - (1 / c) * (a * (x - x1) + b * (y - y1));
 
@@ -190,14 +197,34 @@ class Plot():
         """ draw the 3D axes """
         p = 0.1;
 
-        for x in drange(self.x_start, self.x_stop, p):
-            self.connect((x, 0, 0), self.screen_point(x, 0, 0), self.screen_point(x+p, 0, 0), color=(255, 0, 0), weight=1);
-        for y in drange(self.y_start, self.y_stop, p):
-            self.connect((0, y, 0), self.screen_point(0, y, 0), self.screen_point(0, y+p, 0), color=(0, 255, 0), weight=1);
-        for z in drange(self.z_start, self.z_stop, p):
-            self.connect((0, 0, z), self.screen_point(0, 0, z), self.screen_point(0, 0, z+p), color=(0, 0, 255), weight=1);
+        for x in drange(self.x_start, self.x_stop + p, p):
+            new_point = self.screen_point(x + p, 0, 0);
+            if x and x % self.line_number_freq == 0:
+                if self.ticks:
+                    self.add_shape((x, 0, 0), pygame.draw.line, self.surface, self.x_axis_color, self.screen_point(x, -0.1, 0), self.screen_point(x, 0.1, 0), self.axis_weight);
+                if self.line_numbers:
+                    self.add_shape((x, 0, 0), self.surface.blit, create_text_surface(str(x), 10, self.x_axis_color), (new_point[0], new_point[1] + 10));
+            self.connect((x, 0, 0), self.screen_point(x, 0, 0), new_point, color=self.x_axis_color, weight=self.axis_weight);
+            
+        for y in drange(self.y_start, self.y_stop + p, p):
+            new_point = self.screen_point(0, y + p, 0);
+            if y and y % self.line_number_freq == 0:
+                if self.ticks:
+                    self.add_shape((x, 0, 0), pygame.draw.line, self.surface, self.y_axis_color, self.screen_point(-0.1, y, 0), self.screen_point(0.1, y, 0), self.axis_weight);
+                if self.line_numbers:
+                    self.add_shape((0, y, 0), self.surface.blit, create_text_surface(str(y), 10, self.y_axis_color), (new_point[0], new_point[1] + 10));
+            self.connect((0, y, 0), self.screen_point(0, y, 0), new_point, color=self.y_axis_color, weight=self.axis_weight);
+            
+        for z in drange(self.z_start, self.z_stop + p, p):
+            new_point = self.screen_point(0, 0, z + p);
+            if z and z % self.line_number_freq == 0:
+                if self.ticks:
+                    self.add_shape((x, 0, 0), pygame.draw.line, self.surface, self.z_axis_color, self.screen_point(0, -0.1, z), self.screen_point(0, 0.1, z), self.axis_weight);
+                if self.line_numbers:
+                    self.add_shape((0, 0, z), self.surface.blit, create_text_surface(str(z), 10, self.z_axis_color), (new_point[0] + 10, new_point[1]));
+            self.connect((0, 0, z), self.screen_point(0, 0, z), new_point, color=self.z_axis_color, weight=self.axis_weight);
 
-        self.arrowhead((self.x_stop-0.5, 0, 0), (self.x_stop, 0,0), (255, 0, 0));
+        #self.arrowhead((self.x_stop-0.5, 0, 0), (self.x_stop, 0,0), (255, 0, 0));
 
     def draw_angles(self):
         """ show the angle values on the screen """
@@ -231,14 +258,14 @@ class Plot():
         for shape in self.shapes:
             try:
                 shape.draw();
-                #point = self.screen_point(*shape.M);
-                #pygame.draw.circle(self.surface, (0, 0, 0), (int(point[0]), int(point[1])), 2);
-            except TypeError as e:
-                print("diamond");
-                raise e;
-            except IndexError as e:
-                print("diamond 2");
-                raise e;
+            except TypeError:
+                print(shape.args, shape.kwargs);
+                raise;
+            except ValueError as e:
+                print(shape.args, shape.kwargs);
+                raise;
+            except IndexError:
+                raise;
 
     def zoom(self, f):
         """ zoom in or out by an amount f """
@@ -381,7 +408,7 @@ class Plot():
 
     def update(self):
         """ update all the graphs and everything in the plot """
-        if self.gui is not None: self.handle_gui_msg();
+        #if self.gui is not None: self.handle_gui_msg();
         if self.needs_update:
             initial_time = time.time()
             self.surface.fill(self.background);

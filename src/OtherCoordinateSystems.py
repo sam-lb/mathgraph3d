@@ -1,5 +1,6 @@
 from global_imports import *;
-from Color import preset_styles;
+from Color import preset_styles, Styles, ColorStyle;
+from Plottable import Plottable;
 from ParametricFunctions import ParametricFunctionUV;
 
 
@@ -29,3 +30,29 @@ class SphericalFunction(ParametricFunctionUV):
         parametric_function = lambda u, v: (function(u, v) * sin(u) * cos(v), function(u, v) * sin(u) * sin(v), function(u, v) * cos(u));
         ParametricFunctionUV.__init__(self, plot, parametric_function, color_style, u_start=theta_start, u_stop=theta_stop, v_start=phi_start, v_stop=phi_stop,
                                       u_anchors=theta_anchors, v_anchors=phi_anchors, mesh_on=mesh_on, surf_on=surf_on, mesh_weight=mesh_weight, mesh_color=mesh_color);
+
+
+class PolarFunction(Plottable):
+
+    """ A function of polar coordinates """
+
+    def __init__(self, plot, function, color=(255, 0, 255), theta_start=-pi, theta_stop=pi, step=0.1, line_weight=1):
+        Plottable.__init__(self, plot, function, ColorStyle(Styles.SOLID, color=color));
+        self.color = color;
+        self.theta_start, self.theta_stop = theta_start, theta_stop;
+        self.step = 0.1;
+        self.line_weight = line_weight;
+
+    def draw(self):
+        """ add the function to the plot's drawing queue """
+        last_point = None;
+        for theta in drange(self.theta_start, self.theta_stop + self.step, self.step):
+            try:
+                r = self.function(theta);
+                point = r * cos(theta), r * sin(theta), 0;
+                new_point = self.plot.screen_point(*point);
+                if last_point is not None:
+                    self.plot.add_shape(point, pygame.draw.line, self.plot.surface, self.color, last_point, new_point, self.line_weight);
+                last_point = new_point;
+            except:
+                last_point = None;

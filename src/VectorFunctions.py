@@ -3,6 +3,13 @@ from Color import preset_styles;
 from Plottable import Plottable;
 
 
+def function_gradient(function, step=0.001):
+    """ return a gradient estimation of the function """
+    return lambda x, y, z: ((function(x + step, y) - function(x, y)) / step,
+                            (function(x, y + step) - function(x, y)) / step,
+                            0);
+
+
 class VectorField(Plottable):
 
     """ 3D vector field """
@@ -12,6 +19,11 @@ class VectorField(Plottable):
         self.z_start, self.z_stop = z_start, z_stop;
         self.vecs_per_unit = vecs_per_unit;
         self.step = 1 / vecs_per_unit;
+
+    @classmethod
+    def slope_field_of(cls, plot, function, vecs_per_unit=2, color_style=preset_styles["default"], z=4):
+        """ create a vector field that shows the gradient of the function """
+        return cls(plot, function_gradient(function), vecs_per_unit, color_style, z_start=z-1/vecs_per_unit, z_stop=z-1/vecs_per_unit);
 
     def set_z_bounds(self, start, stop):
         """ set the z bounds """
@@ -35,7 +47,7 @@ class VectorField(Plottable):
             i += 1;
             for y in drange(self.plot.y_start, self.plot.y_stop+2*self.step, 2*self.step):
                 j += 1;
-                for z in drange(self.plot.z_start, self.plot.z_stop+2*self.step, 2*self.step):
+                for z in drange(self.z_start, self.z_stop+2*self.step, 2*self.step):
                     try:
                         origin = self.plot.screen_point(x, y, z);
                         head = Vector(*self.function(x, y, z));

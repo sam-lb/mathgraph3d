@@ -59,6 +59,10 @@ def text(text, x, y, surface, color=(255, 255, 255)):
     surf = font.render(text, 1, color);
     surface.blit(surf, (x, y));
 
+def create_text_surface(text, size, color):
+    """ creates a surface with text on it """
+    return pygame.font.SysFont("arial", size).render(text, 1, color);
+
 def distance3D(A, B):
     """ calculates the distance between 2 3D points """
     return math.sqrt((A[0] - B[0]) ** 2 + (A[1] - B[1]) ** 2 + (A[2] - B[2]) ** 2);
@@ -106,7 +110,7 @@ class Vector():
         return "Vector({}, {})".format(round(self.x, 2), round(self.y, 2));
 
     def normalize(self):
-        """ normalize the vector i.e. make it's magnitude 1; ||v|| """
+        """ normalize the vector i.e. make it's magnitude 1; 1/||v||*v """
         self.x = self.x / self.magnitude;
         self.y = self.y / self.magnitude;
         self.z = self.z / self.magnitude;
