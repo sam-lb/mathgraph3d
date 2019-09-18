@@ -3,24 +3,10 @@ from tkinter.colorchooser import askcolor;
 from tkinter.messagebox import showinfo;
 from Color import preset_styles;
 from CAS import Parser;
+from Color import Styles, ColorStyle, preset_styles;
 from pygame import Color;
 from pprint import pprint;
 # we don't need any of the global imports here.
-
-
-# plot types not implemented into GUI:
-# - RecurrenceRelation
-# - PolarFunction         !!
-# - ImplicitPlot2D        !!
-# - ComplexFunction       !!
-# - StatPlot2D
-# - StatPlot3D            !!
-
-# Other features not implemented in GUI:
-# - points
-# - planes from 3 points
-# - the majority of settings for functions
-# - slope fields
 
 
 FUNCTIONS = [
@@ -67,10 +53,32 @@ SOLID_ONLY = [
     True, False, True, False, False, False, False, True, True, True, True, None, True, True, False, True, False,
 ];
 
-OBJECT_DATA = dict(zip(OBJECT_TYPES, zip(REFERENCE_STRINGS, PROMPTS, SOLID_ONLY)));
+LIGHTING_APPLICABLE = [
+    False, True, False, True, True, True, True, False, False, False, False, True, False, False, True, False, False,
+];
+
+PARSER_VALID_SYMBOLS = [
+    ("x",), ("x", "y"), ("t",), ("u", "v"), ("x",), ("z", "t"), ("t", "p"), ("x", "y", "z"), ("t",),
+    ("n",), ("x", "y"), None, None, None, None,
+];
+
+COLOR_TYPES = [
+    "solid", "checkerboard", "gradient", "vertical striped", "horizontal striped", "color set",
+];
+
+COLOR_CC = [          # (Styles constant, number of required colors)
+    (Styles.SOLID, 1), (Styles.CHECKERBOARD, 2), (Styles.GRADIENT, 2),
+    (Styles.VERTICAL_STRIPED, 2), (Styles.HORIZONTAL_STRIPED, 2), (Styles.COLOR_SET, 5),
+];
+
+COLOR_DATA = dict(zip(COLOR_TYPES, COLOR_CC));
+
+OBJECT_DATA = dict(zip(OBJECT_TYPES, zip(REFERENCE_STRINGS, PROMPTS, SOLID_ONLY, LIGHTING_APPLICABLE, PARSER_VALID_SYMBOLS)));
+#pprint(OBJECT_DATA);
 
 SUBFRAME_COLOR = "#f0f0ff";
 BUTTON_COLOR = "#ccccff";
+BLINK_COLOR = "#ffcccc";
 COLOR_STYLES = [];
 
 
@@ -141,12 +149,27 @@ class GraphObjectSettingsWindow(tk.Toplevel):
         self.configure(background=SUBFRAME_COLOR);
         self.deiconify();
         self.focus();
+
+        self.bind("<FocusOut>", self.alarm);
+        #self.grab_set();
         
         self.object_type = object_type;
         self.data = OBJECT_DATA[object_type];
         self.text_inputs = {};
         
         self.create_widgets();
+
+    def alarm(self, event):
+        """ handle when the user tries to click away """
+        self.focus_force();
+        #self.blink();
+
+    def blink(self, blinks=3, blink_length=80):
+        """ blink the window """
+        self.configure(background=BLINK_COLOR);
+        for i in range(blinks):
+            self.after(blink_length, lambda: self.configure(background=BLINK_COLOR));
+            self.after(blink_length, lambda: self.configure(background=SUBFRAME_COLOR));
 
     def create_input_box(self, label, row):
         """ create a text input box and a label for it """
@@ -160,14 +183,31 @@ class GraphObjectSettingsWindow(tk.Toplevel):
         """ generate widgets from self.data """
         row = 2;
         tk.Label(self, text=self.object_type).grid(row=0, column=0, sticky=tk.W);
-        tk.Label(self, text=self.data[0], wraplength=400, justify=tk.LEFT).grid(row=1, column=0, sticky=tk.W);
+        tk.Label(self, text=self.data[0], wraplength=300, justify=tk.LEFT).grid(row=1, column=0, sticky=tk.W);
         for prompt in self.data[1]:
             self.create_input_box(prompt, row);
             row += 1;
+            
+        self.style = tk.StringVar(self, value="select...");
+        color_frame = tk.Frame(self, borderwidth=3, relief="groove", background=SUBFRAME_COLOR);
+        
+        if self.data[2]: # solid only
+            self.style.set("solid"); 
+            self.color_style_set(color_frame, 0);
+        elif self.data[2] is None:
+            pass;
+        else:
+            tk.OptionMenu(self, self.style, *(COLOR_TYPES + ["preset"]),
+                          command=lambda event: self.color_style_set(color_frame, 0)).grid(row=row, sticky=tk.W);
+            row += 1;
+            
+        color_frame.grid(row=row, sticky=tk.W);
+        row += 1;
 
     def color_style(self, row=0, solid_only=False):
         """ Draw the widgets for ColorStyle configuring """
         def on_check(lighting):
+            return;
             nonlocal row;
             value = lighting.get();
             self.add_data("apply_lighting", value);
@@ -212,6 +252,9 @@ class GraphObjectSettingsWindow(tk.Toplevel):
         color_preview.grid(row=row, column=3);
         on_color_select(color_box, color_preview, ask=False);
         tk.Button(frame, text="select color", command=lambda: on_color_select(color_box, color_preview, ask=True)).grid(row=row, column=2);
+
+    def add_data(self, *args): # REMOVE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        pass;
 
     def color_style_set(self, frame, row):
         """ Set the widgets when a ColorStyle is chosen """

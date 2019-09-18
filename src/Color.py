@@ -17,10 +17,9 @@ class Styles:
     CHECKERBOARD = 1;
     SCREEN_LIGHTING = 2;
     GRADIENT = 3;
-    VALUE_BASED = 4;
-    VERTICAL_STRIPED = 5;
-    HORIZONTAL_STRIPED = 6;
-    COLOR_SET = 7;
+    VERTICAL_STRIPED = 4;
+    HORIZONTAL_STRIPED = 5;
+    COLOR_SET = 6;
 
 
 class Gradient():
@@ -183,8 +182,6 @@ preset_styles = {
     "poison": ColorStyle(Styles.HORIZONTAL_STRIPED, color1=(132, 22, 164), color2=(10, 252, 119)),
     "circus": ColorStyle(Styles.HORIZONTAL_STRIPED, color1=(230, 206, 52), color2=(245, 42, 148)),
     "zebra": ColorStyle(Styles.HORIZONTAL_STRIPED, color1=(41, 65, 66), color2=(198, 181, 250)),
-
-    "cushion": ColorStyle(Styles.VALUE_BASED, base_color=(255, 100, 100)),
     
     "default": ColorStyle(Styles.SOLID, color=(255, 0, 0)),
 

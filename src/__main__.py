@@ -83,7 +83,7 @@ def main():
 ##    Function3D(plot, lambda x, y: (y*sin(x) + x*cos(y))/2, color_style=ColorStyle(Styles.CHECKERBOARD, color1=(100, 100, 255), color2=(150, 255, 150), apply_lighting=True, light_source=(0, 0, 6)));
 ##    ImplicitPlot2D(plot, lambda x, y: y*sin(x) + x*cos(y) - 1, color=(0, 128, 255));
 ##    ImplicitPlot2D(plot, lambda x, y: -(y*sin(x) + x*cos(y)) - 1, color=(255, 128, 0));
-##    ImplicitPlot2D(plot, lambda x, y: sqrt(sin(x**2+y**2))+1, line_weight=2);
+##    ImplicitPlot2D(plot, lambda x, y: sqrt(sin(x**2+y**2))+1, line_weight=2, squares_x=10, squares_y=10);
 ##    function = lambda x, y: sin(sin(x)+sin(y));
 ##    Function3D(plot, function, color_style=ColorStyle(Styles.SOLID, color=(228, 228, 255), apply_lighting=True, light_source=(0, 0, 6)));
 ##    VectorField.slope_field_of(plot, function, vecs_per_unit=2);
