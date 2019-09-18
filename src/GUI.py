@@ -36,8 +36,8 @@ REFERENCE_STRINGS = [
     """The set of all points in the domain such that the two given functions of x and y are equal. Valid symbols: x, y""",
     """A map from a single complex input to a single complex output. Since there are four dimensions involved, the fourth dimension is represented as color. Valid symbols: z""",
     """The slope field of the given function. Valid symbols: x, y""",
-    """A graph formed by a set of numerical points rather than a continuous function""",
-    """A graph formed by a mesh of numerical points rather than a continuous function""",
+    """A curve formed by a set of numerical points rather than a continuous function""",
+    """A surface formed by a mesh of numerical points rather than a continuous function""",
     """A single point in 3D space""",
     """A plane formed from 3 points""",
 ];
@@ -57,6 +57,10 @@ LIGHTING_APPLICABLE = [
     False, True, False, True, True, True, True, False, False, False, False, True, False, False, True, False, False,
 ];
 
+MESHING_APPLICABLE = [
+    False, True, False, True, True, True, True, False, False, False, False, True, False, False, True, False, True,
+];
+
 PARSER_VALID_SYMBOLS = [
     ("x",), ("x", "y"), ("t",), ("u", "v"), ("x",), ("z", "t"), ("t", "p"), ("x", "y", "z"), ("t",),
     ("n",), ("x", "y"), None, None, None, None,
@@ -73,7 +77,7 @@ COLOR_CC = [          # (Styles constant, number of required colors)
 
 COLOR_DATA = dict(zip(COLOR_TYPES, COLOR_CC));
 
-OBJECT_DATA = dict(zip(OBJECT_TYPES, zip(REFERENCE_STRINGS, PROMPTS, SOLID_ONLY, LIGHTING_APPLICABLE, PARSER_VALID_SYMBOLS)));
+OBJECT_DATA = dict(zip(OBJECT_TYPES, zip(REFERENCE_STRINGS, PROMPTS, SOLID_ONLY, LIGHTING_APPLICABLE, MESHING_APPLICABLE, PARSER_VALID_SYMBOLS)));
 #pprint(OBJECT_DATA);
 
 SUBFRAME_COLOR = "#f0f0ff";
@@ -120,6 +124,7 @@ class Interface(tk.Frame):
     def on_new_plot(self, event):
         """ called when the user selects a new plot to add """
         plot_type = self.plot_to_open.get();
+        
         self.add_object(plot_type);
         self.plot_to_open.set("Add a new object to the plot");
 
@@ -133,8 +138,8 @@ class Interface(tk.Frame):
 
     def add_object(self, object_type):
         """ Add an object to the plot, and create the settings widget for it in the GUI """
-        #self.objects.append(GraphObject(self.function_frame, self.function_frame_row, object_type));
-        GraphObjectSettingsWindow(self, object_type);
+        obj = GraphObject(self.function_frame, self.function_frame_row, object_type);
+        GraphObjectSettingsWindow(self, object_type, obj);
         self.function_frame_row += 1;
 
 
@@ -142,7 +147,7 @@ class GraphObjectSettingsWindow(tk.Toplevel):
 
     """ A window for configuring the settings of a graph object """
 
-    def __init__(self, master, object_type):
+    def __init__(self, master, object_type, assoc_object):
         tk.Toplevel.__init__(self, master);
         self.master = master;
         self.geometry("400x400");
@@ -155,6 +160,7 @@ class GraphObjectSettingsWindow(tk.Toplevel):
         
         self.object_type = object_type;
         self.data = OBJECT_DATA[object_type];
+        self.associated_object = assoc_object;
         self.text_inputs = {};
         
         self.create_widgets();
@@ -204,6 +210,14 @@ class GraphObjectSettingsWindow(tk.Toplevel):
         color_frame.grid(row=row, sticky=tk.W);
         row += 1;
 
+        if self.data[4]:
+            self.mesh, self.surf = tk.IntVar(self), tk.IntVar(self);
+            self.mesh.set(1); self.surf.set(1);
+            tk.Checkbutton(self, text="Mesh", var=self.mesh).grid(row=row, sticky=tk.W);
+            tk.Checkbutton(self, text="Surface", var=self.surf).grid(row=row+1, sticky=tk.W);
+            row += 2;
+            
+
     def color_style(self, row=0, solid_only=False):
         """ Draw the widgets for ColorStyle configuring """
         def on_check(lighting):
@@ -237,7 +251,7 @@ class GraphObjectSettingsWindow(tk.Toplevel):
         """ create widgets for a color picker """
         def on_color_select(cbox, canv, ask=True):
             nonlocal self;
-            if ask: color = askcolor(initialcolor="red",  parent=self)[1];
+            if ask: color = askcolor(initialcolor="red", parent=self)[1];
             else: color="#ff0000";
             if not color: return;
 
@@ -259,26 +273,40 @@ class GraphObjectSettingsWindow(tk.Toplevel):
     def color_style_set(self, frame, row):
         """ Set the widgets when a ColorStyle is chosen """
         value = self.style.get();
-        self.add_data("plot type", value);
+        
         for child in frame.winfo_children():
             child.destroy();
 
-        if value == "solid":
-            self.color_box(frame, row);
-        elif value in ("checkerboard", "gradient", "vertical striped", "horizontal striped"):
-            cbox1 = self.color_box(frame, row, text="Color 1: ", data_name="color 1");
-            cbox2 = self.color_box(frame, row+1, text="Color 2: ", data_name="color 2");
-        elif value == "color set":
-            self.color_box(frame, row, text="Color 1: ", data_name="color 1");
-            self.color_box(frame, row+1, text="Color 2: ", data_name="color 2");
-            self.color_box(frame, row+2, text="Color 3: ", data_name="color 3");
-            self.color_box(frame, row+3, text="Color 4: ", data_name="color 4");
-            self.color_box(frame, row+4, text="Color 5: ", data_name="color 5");
-        elif value == "preset":
+
+        color_count = COLOR_DATA.get(value);
+        if color_count is None:
             tk.Label(frame, text="select preset: ").grid(row=row);
             preset = tk.StringVar(frame, value="tmp");
-            self.add_data("plot type", preset.get());
-            tk.OptionMenu(frame, preset, *sorted(preset_styles.keys()), command=lambda event: self.add_data("plot type", preset.get())).grid(row=row, column=1);
+            tk.OptionMenu(frame, preset, *sorted(preset_styles.keys()), command=lambda event: None).grid(row=row, column=1)
+        else:
+            for i in range(1, color_count[1] + 1):
+                self.color_box(frame, row, text="Color {}: ".format(i), data_name="chicken house");
+                row += 1;
+            self.lighting = tk.IntVar(frame);
+            tk.Checkbutton(frame, text="Apply lighting", var=self.lighting).grid(row=row);
+            row += 1;
+
+##        if value == "solid":
+##            self.color_box(frame, row);
+##        elif value in ("checkerboard", "gradient", "vertical striped", "horizontal striped"):
+##            cbox1 = self.color_box(frame, row, text="Color 1: ", data_name="color 1");
+##            cbox2 = self.color_box(frame, row+1, text="Color 2: ", data_name="color 2");
+##        elif value == "color set":
+##            self.color_box(frame, row, text="Color 1: ", data_name="color 1");
+##            self.color_box(frame, row+1, text="Color 2: ", data_name="color 2");
+##            self.color_box(frame, row+2, text="Color 3: ", data_name="color 3");
+##            self.color_box(frame, row+3, text="Color 4: ", data_name="color 4");
+##            self.color_box(frame, row+4, text="Color 5: ", data_name="color 5");
+##        elif value == "preset":
+##            tk.Label(frame, text="select preset: ").grid(row=row);
+##            preset = tk.StringVar(frame, value="tmp");
+##            self.add_data("plot type", preset.get());
+##            tk.OptionMenu(frame, preset, *sorted(preset_styles.keys()), command=lambda event: self.add_data("plot type", preset.get())).grid(row=row, column=1);
 
 
 class GraphObject:
@@ -293,7 +321,7 @@ class GraphObject:
         tk.Label(self.frame, text=self.object_type).grid(row=0, column=0);
         tk.Label(self.frame, text="\n".join(PROMPTS[FUNCTIONS.index(self.object_type)])).grid(row=1, column=0, sticky=tk.W);
         self.frame.grid(row=self.row, column=0, sticky=tk.E+tk.W);
-        self.associated_object = None;
+        self.obj_data = {};
 
 
 ##def create_function_frame(self):

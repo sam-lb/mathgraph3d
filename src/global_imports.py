@@ -92,6 +92,12 @@ def sort_clockwise(*points):
     center = (sum((point[0] for point in points))/len(points), sum((point[1] for point in points))/len(points));
     return sorted(points, key=lambda p: math.atan2(p[1]-center[1], p[0]-center[0]));
 
+def function_gradient(function, step=0.001):
+    """ return a gradient estimation of the function """
+    return lambda x, y, z: ((function(x + step, y) - function(x, y)) / step,
+                            (function(x, y + step) - function(x, y)) / step,
+                            0);
+
 class Vector():
 
     """ A class for representing vectors """

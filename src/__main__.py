@@ -29,7 +29,7 @@ def on_close():
 
 def main():
     WIDTH, HEIGHT = 630, 500;#683, 768;
-    GUI = True;
+    GUI = False;
     TESTING = False;
 
     def on_close():
@@ -95,6 +95,11 @@ def main():
 ##    VectorField.slope_field_of(plot, function, vecs_per_unit=2);
 ##    ComplexFunction(plot, cmath.exp, mesh_on=False, real_anchors=64, imag_anchors=64);
 ##    ComplexFunction(plot, gamma, mesh_on=False, real_anchors=64, imag_anchors=64);
+    func = lambda x, y: sin(x) + sin(y);
+    tangent = plot.tangent_plane(func, 1, 2);
+    plot.add_point((1, 2, func(1, 2)));
+    Function3D(plot, func, color_style=preset_styles["cool-blue"]);
+    Function3D(plot, tangent, color_style=ColorStyle(Styles.SOLID, color=(225, 225, 255)));
 
 
     while running:

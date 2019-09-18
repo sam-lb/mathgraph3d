@@ -171,6 +171,11 @@ class Plot():
         point = self.screen_point(*pos);
         self.add_shape(pos, pygame.draw.circle, self.surface, color, (int(point[0]), int(point[1])), int(radius * self.x_scale));
 
+    def tangent_plane(self, function, x0, y0):
+        """ returns the function of the tangent plane to the given function at (x, y) """
+        gradient = function_gradient(function)(x0, y0, 0);
+        return lambda x, y: function(x0, y0) + gradient[0] * (x - x0) + gradient[1] * (y - y0);
+
     def plane_from_3_points(self, A, B, C):
         """ returns the function of the plane that contains A, B, and C unless they are colinear """
         AB = (B[0] - A[0], B[1] - A[1], B[2] - A[2]);

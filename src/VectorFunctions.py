@@ -3,13 +3,6 @@ from Color import preset_styles;
 from Plottable import Plottable;
 
 
-def function_gradient(function, step=0.001):
-    """ return a gradient estimation of the function """
-    return lambda x, y, z: ((function(x + step, y) - function(x, y)) / step,
-                            (function(x, y + step) - function(x, y)) / step,
-                            0);
-
-
 class VectorField(Plottable):
 
     """ 3D vector field """
