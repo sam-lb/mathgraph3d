@@ -17,7 +17,7 @@ FUNCTIONS = [
 ];
 
 OTHER_OBJECTS = [
-    "2D stat plot", "3D stat plot", "Point", "Plane",
+    "2D stat plot", "3D stat plot", "Point", "Plane", "Tangent Plane"
 ];
 
 OBJECT_TYPES = FUNCTIONS + OTHER_OBJECTS;
@@ -40,30 +40,31 @@ REFERENCE_STRINGS = [
     """A surface formed by a mesh of numerical points rather than a continuous function""",
     """A single point in 3D space""",
     """A plane formed from 3 points""",
+    """A plane tangent to a function of x and y at a point. Valid Symbols: x, y""",
 ];
 
 PROMPTS = [
     ("f(x)=",), ("f(x,y)=",), ("x(t)=", "y(t)=", "z(t)="), ("x(u,v)=", "y(u,v)=", "z(u,v)="),
     ("f(x)=",), ("r(z,t)=",), ("r(t,p)=",), ("x(x,y,z)=", "y(x,y,z)=", "z(x,y,z)="), ("r(t)=",),
-    ("a(n)=",), ("f(x,y)=", "g(x,y)="), ("f(z)=",), ("f(x,y)=",), ("Enter file name: ",), ("Enter file name: ",),
-    ("Enter point in (x, y, z) format: ",), ("Point 1", "Point 2", "Point 3"),
+    ("a(n)=", "seed value: "), ("f(x,y)=", "g(x,y)="), ("f(z)=",), ("f(x,y)=",), ("Enter file name: ",), ("Enter file name: ",),
+    ("Enter point in (x, y, z) format: ",), ("Point 1", "Point 2", "Point 3"), ("f(x, y)=", "x=", "y="),
 ];
 
 SOLID_ONLY = [
-    True, False, True, False, False, False, False, True, True, True, True, None, True, True, False, True, False,
+    True, False, True, False, False, False, False, True, True, True, True, None, True, True, False, True, False, False,
 ];
 
 LIGHTING_APPLICABLE = [
-    False, True, False, True, True, True, True, False, False, False, False, True, False, False, True, False, False,
+    False, True, False, True, True, True, True, False, False, False, False, True, False, False, True, False, False, True,
 ];
 
 MESHING_APPLICABLE = [
-    False, True, False, True, True, True, True, False, False, False, False, True, False, False, True, False, True,
+    False, True, False, True, True, True, True, False, False, False, False, True, False, False, True, False, True, True,
 ];
 
 PARSER_VALID_SYMBOLS = [
     ("x",), ("x", "y"), ("t",), ("u", "v"), ("x",), ("z", "t"), ("t", "p"), ("x", "y", "z"), ("t",),
-    ("n",), ("x", "y"), None, None, None, None,
+    ("n",), ("x", "y"), ("z",), ("x", "y"), None, None, None, None, ("x", "y"),
 ];
 
 COLOR_TYPES = [
@@ -78,7 +79,7 @@ COLOR_CC = [          # (Styles constant, number of required colors)
 COLOR_DATA = dict(zip(COLOR_TYPES, COLOR_CC));
 
 OBJECT_DATA = dict(zip(OBJECT_TYPES, zip(REFERENCE_STRINGS, PROMPTS, SOLID_ONLY, LIGHTING_APPLICABLE, MESHING_APPLICABLE, PARSER_VALID_SYMBOLS)));
-#pprint(OBJECT_DATA);
+##pprint(OBJECT_DATA);
 
 SUBFRAME_COLOR = "#f0f0ff";
 BUTTON_COLOR = "#ccccff";
@@ -319,7 +320,7 @@ class GraphObject:
         self.object_type = object_type;
         self.frame = tk.Frame(self.parent_frame, borderwidth=3, relief="groove", background=SUBFRAME_COLOR);
         tk.Label(self.frame, text=self.object_type).grid(row=0, column=0);
-        tk.Label(self.frame, text="\n".join(PROMPTS[FUNCTIONS.index(self.object_type)])).grid(row=1, column=0, sticky=tk.W);
+        tk.Label(self.frame, text="\n".join(PROMPTS[OBJECT_TYPES.index(self.object_type)])).grid(row=1, column=0, sticky=tk.W);
         self.frame.grid(row=self.row, column=0, sticky=tk.E+tk.W);
         self.obj_data = {};
 
