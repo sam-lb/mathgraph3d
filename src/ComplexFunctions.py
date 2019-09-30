@@ -12,7 +12,7 @@ class ComplexFunction(Plottable):
 
     """ A 4D plot of a complex function. 3 spatial dimensions and 1 color dimension """
 
-    def __init__(self, plot, function, real_anchors=32, imag_anchors=32, surf_on=True, mesh_on=True, mesh_weight=1, detection=False, detection_level=0.7):
+    def __init__(self, plot, function, real_anchors=32, imag_anchors=32, surf_on=True, mesh_on=True, mesh_weight=1, detection=False, detection_level=0.7, color_style=None):
         Plottable.__init__(self, plot, function, preset_styles["rainbow"]);
         self.real_anchors, self.imag_anchors = real_anchors, imag_anchors;
         self.surf_on, self.mesh_on = surf_on, mesh_on;
@@ -91,3 +91,9 @@ class ComplexFunction(Plottable):
     def draw(self):
         """ add the function's shapes to the plot's drawing queue """
         self.draw3D();
+
+    @classmethod
+    def make_function_string(cls, funcs):
+        """ return a callable function from a string specific to the type of Plottable. to be overridden """
+        func = funcs[0];
+        return lambda z: func.complex_evaluate(z=z);

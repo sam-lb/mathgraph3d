@@ -54,7 +54,7 @@ def main():
 
     pygame.init();
     screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE);
-    pygame.display.set_caption("ThreeDE - V5");
+    pygame.display.set_caption("MathGraph 3D");
     pygame.key.set_repeat(100, 50);
 
     clock = pygame.time.Clock();
@@ -72,12 +72,11 @@ def main():
 ##    f_x = lambda u, v: (3+sin(v)+cos(u))*cos(2*v);
 ##    f_y = lambda u, v: (3+sin(v)+cos(u))*sin(2*v);
 ##    f_z = lambda u, v: sin(u)+2*cos(v);
-##    ParametricFunctionUV(plot, lambda u, v: (f_x(u, v), f_y(u, v), f_z(u, v)), u_start=-math.pi, u_stop=math.pi, v_start=-math.pi, v_stop=math.pi, mesh_on=False, color_style=ColorStyle(Styles.SOLID, color=(255, 0, 0), apply_lighting=True, light_source=(0,0,6)), u_anchors=150, v_anchors=150);
+##    ParametricFunctionUV(plot, lambda u, v: (f_x(u, v), f_y(u, v), f_z(u, v)), u_start=-math.pi, u_stop=math.pi, v_start=-math.pi, v_stop=math.pi, mesh_on=False, color_style=ColorStyle(Styles.GRADIENT, color1=(255, 0, 0), color2=(200, 0, 128), apply_lighting=True, light_source=(0,0,6)), u_anchors=60, v_anchors=60);
 ##    CylindricalFunction(plot, lambda z, t: t/z, color_style=ColorStyle(Styles.GRADIENT, color1=(200, 100, 100), color2=(100, 100, 200)), z_anchors=70, mesh_on=False);
-##    Function3D(plot, lambda x, y: 2*(sin(x)+sin(y)), color_style=ColorStyle(Styles.CHECKERBOARD, color1=(200, 0, 50), color2=(255, 0, 255)), mesh_on=False);
+##    Function3D(plot, lambda x, y: 2*(sin(x)+sin(y)), color_style=ColorStyle(Styles.CHECKERBOARD, color1=(200, 0, 50), color2=(255, 0, 255)));
 ##    Function3D(plot, lambda x, y: sin(math.sqrt(x**2+y**2))-1, color_style=ColorStyle(Styles.SOLID, color=(255, 255, 255), apply_lighting=True, light_source=(0, 0, 4)), x_anchors=220, y_anchors=220, mesh_on=False);
 ##    RevolutionSurface(plot, lambda x: x, surf_on=True);
-##    Function3D(plot, lambda x, y: math.sqrt(4-x**2-y**2), color_style=ColorStyle(Styles.SOLID, color=(255, 255, 255), apply_lighting=True, light_source=(0,0,6)), x_anchors=100, y_anchors=10000, mesh_on=False);
 ##    RecurrenceRelation(plot, lambda last: 2*last*(1-last), seed_value=0.75, unit_scale=1);
 ##    PolarFunction(plot, lambda theta: 4);
 ##    Function3D(plot, lambda x, y: (y*sin(x) + x*cos(y))/2, color_style=ColorStyle(Styles.CHECKERBOARD, color1=(100, 100, 255), color2=(150, 255, 150), apply_lighting=True, light_source=(0, 0, 6)));
@@ -96,11 +95,12 @@ def main():
 ##    ComplexFunction(plot, cmath.exp, mesh_on=False, real_anchors=64, imag_anchors=64);
 ##    ComplexFunction(plot, gamma, mesh_on=False, real_anchors=64, imag_anchors=64);
 
-##    func = lambda x, y: sin(x) + sin(y);
-##    tangent = plot.tangent_plane(func, 1, 2);
-##    plot.add_point((1, 2, func(1, 2)));
+##    func = lambda x, y: cos(x**2+y);
+##    tangent = plot.tangent_plane(func, 0, 1);
+##    plot.add_point((0, 1, func(0, 1)));
 ##    Function3D(plot, func, color_style=preset_styles["cool-blue"]);
 ##    Function3D(plot, tangent, color_style=ColorStyle(Styles.SOLID, color=(225, 225, 255)));
+##    Function3D(plot, lambda x, y: x**2-y**2, color_style=ColorStyle(Styles.VERTICAL_STRIPED, color1=(0, 0, 0), color2=(255, 255, 255), apply_lighting=True, light_source=(0, 0, 6)));
 
 
     while running:

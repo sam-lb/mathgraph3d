@@ -7,11 +7,11 @@ class ParametricFunctionT(Plottable):
 
     """ Parametric function of one parameter """
 
-    def __init__(self, plot, function, t_start=-5, t_stop=5, line_color=(0, 0, 0), line_weight=1, t_step=0.1):
-        Plottable.__init__(self, plot, function);
+    def __init__(self, plot, function, t_start=-5, t_stop=5, color_style=preset_styles["default"], line_weight=1, t_step=0.1):
+        Plottable.__init__(self, plot, function, color_style=color_style);
 
         self.t_start, self.t_stop, self.t_step = t_start, t_stop, t_step;
-        self.line_color, self.line_weight = line_color, line_weight;
+        self.line_color, self.line_weight = self.color_style.settings["color"], line_weight;
 
     def draw(self):
         """ place the function into the plot's drawing queue """
@@ -26,6 +26,12 @@ class ParametricFunctionT(Plottable):
                 if prev_point is not None:
                     self.plot.connect(point, prev_point, new_point, color=self.line_color, weight=self.line_weight);
                 prev_point = new_point;
+
+    @classmethod
+    def make_function_string(cls, funcs):
+        """ return a callable function from a string specific to the type of Plottable. to be overridden """
+        func1, func2, func3 = funcs;
+        return lambda t: (func1.evaluate(t=t), func2.evaluate(t=t), func3.evaluate(t=t));
 
 
 class ParametricFunctionUV(Plottable):
@@ -47,6 +53,12 @@ class ParametricFunctionUV(Plottable):
         """ Place the function into the plot's drawing queue """
         self.draw3D();
 
+    @classmethod
+    def make_function_string(cls, funcs):
+        """ return a callable function from a string specific to the type of Plottable. to be overridden """
+        func1, func2, func3 = funcs;
+        return lambda u, v: (func1.evaluate(u=u, v=v), func2.evaluate(u=u, v=v), func3.evaluate(u=u, v=v));
+
 
 class RevolutionSurface(ParametricFunctionUV):
 
@@ -57,3 +69,9 @@ class RevolutionSurface(ParametricFunctionUV):
         func = lambda u, v: (u, function(u) * cos(v), function(u) * sin(v));
         self.x_anchors, self.y_anchors = x_anchors, y_anchors;
         ParametricFunctionUV.__init__(self, plot, func, color_style, 0, 2 * pi, plot.x_start, plot.x_stop, x_anchors, y_anchors, mesh_on, surf_on, mesh_weight, mesh_color);
+
+    @classmethod
+    def make_function_string(cls, funcs):
+        """ return a callable function from a string specific to the type of Plottable. to be overridden """
+        func = funcs[0];
+        return lambda x: func.evaluate(x=x);

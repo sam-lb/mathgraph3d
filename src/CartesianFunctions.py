@@ -16,8 +16,8 @@ class Function2D(CartesianFunction):
     """ A 2D function of a single variable x """
 
     def __init__(self, plot, function, x_start=-4, x_stop=4, y_start=-4, y_stop=4, points_per_unit=100,
-                 line_color_style=ColorStyle(Styles.SOLID, color=(0, 0, 0)), line_weight=1, detect_poles=True):
-        CartesianFunction.__init__(self, plot, function, line_color_style);
+                 color_style=ColorStyle(Styles.SOLID, color=(0, 0, 0)), line_weight=1, detect_poles=True):
+        CartesianFunction.__init__(self, plot, function, color_style);
 
         self.step = (self.plot.x_stop - self.plot.x_start) / points_per_unit;
         self.line_weight = line_weight;
@@ -42,6 +42,12 @@ class Function2D(CartesianFunction):
                 if prev_point is not None and ((self.detect_poles and abs(new_point[1]-prev_point[1]) < 40) or not self.detect_poles):
                     self.plot.connect(point, prev_point, new_point, color=self.color_style.next_color(), weight=self.line_weight);
                 prev_point = new_point;
+
+    @classmethod
+    def make_function_string(cls, funcs):
+        """ return a callable function from a string specific to the type of Plottable. to be overridden """
+        func = funcs[0];
+        return lambda x: func.evaluate(x=x);
 
 
 class Function3D(CartesianFunction):
@@ -99,3 +105,9 @@ class Function3D(CartesianFunction):
         """ add the function to the plot's drawing queue """
         if self.prism_plot: self.plot_prisms();
         self.draw3D();
+
+    @classmethod
+    def make_function_string(cls, funcs):
+        """ return a callable function from a string specific to the type of Plottable. to be overridden """
+        func = funcs[0];
+        return lambda x, y: func.evaluate(x=x, y=y);

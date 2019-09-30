@@ -200,3 +200,8 @@ class Plottable():
             points = tuple(map(lambda p: self.plot.screen_point(*p), poly.points));
             if self.surf_on: self.plot.add_shape(poly.M, pygame.draw.polygon, self.plot.surface, poly.color, points);
             if self.mesh_on: self.plot.add_shape(poly.M, pygame.draw.polygon, self.plot.surface, self.mesh_color, points, self.mesh_weight);
+
+    @classmethod
+    def make_function_string(cls, funcs):
+        """ return a callable function from a string specific to the type of Plottable. to be overridden """
+        pass;

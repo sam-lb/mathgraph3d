@@ -56,3 +56,9 @@ class VectorField(Plottable):
                     else:
                         self.draw_arrow((x, y, z), origin, proj_head, color, 1);
             j = 0;
+
+    @classmethod
+    def make_function_string(cls, funcs):
+        """ return a callable function from a string specific to the type of Plottable. to be overridden """
+        func1, func2, func3 = funcs;
+        return lambda x, y, z: (func1.evaluate(x=x, y=y, z=z), func2.evaluate(x=x, y=y, z=z), func3.evaluate(x=x, y=y, z=z));

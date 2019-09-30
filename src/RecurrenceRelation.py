@@ -32,3 +32,9 @@ class RecurrenceRelation(Plottable):
                     last_value = point[1];
                 except:
                     last_point = None;
+
+    @classmethod
+    def make_function_string(cls, funcs):
+        """ return a callable function from a string specific to the type of Plottable. to be overridden """
+        func = funcs[0];
+        return lambda n: func.evaluate(n=n);

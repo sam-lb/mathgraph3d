@@ -143,8 +143,7 @@ class ColorStyle():
             pass;
         elif self.style == Styles.GRADIENT:
             color = self.gradient(kwargs);
-        elif self.style == Styles.VALUE_BASED:
-            color = self.value_based(kwargs);
+
         elif self.style == Styles.VERTICAL_STRIPED:
             color = self.vertical_striped(kwargs);
         elif self.style == Styles.HORIZONTAL_STRIPED:

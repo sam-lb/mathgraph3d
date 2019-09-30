@@ -7,6 +7,7 @@ from CartesianFunctions import Function2D, Function3D;
 from ParametricFunctions import ParametricFunctionT, ParametricFunctionUV, RevolutionSurface;
 from VectorFunctions import VectorField;
 from OtherCoordinateSystems import CylindricalFunction, SphericalFunction;
+##import numpy as np;
 
 import time;
 
@@ -35,6 +36,7 @@ class Plot():
         self.alpha, self.beta = alpha, beta;
         self.get_unit_vectors();
         self.get_sortbox();
+        
         self.updates, self.time = 0, 0;
         self.axis_weight = axis_weight;
         self.x_axis_color, self.y_axis_color, self.z_axis_color = x_axis_color, y_axis_color, z_axis_color;
@@ -278,142 +280,12 @@ class Plot():
         self.needs_update = True;
         self.set_bounds(self.x_start, self.x_stop, self.y_start, self.y_stop, self.z_start, self.z_stop);
 
-    def get_color_style(self):
-        """ Produce a ColorStyle object from GUI data """
-        light_source = (self.gui.extra_data.get("light_source_x"),
-                        self.gui.extra_data.get("light_source_y"),
-                        self.gui.extra_data.get("light_source_z"));
-
-        if self.gui.extra_data["plot type"] == "solid":
-            return ColorStyle(Styles.SOLID, color=self.gui.extra_data["fill color"], apply_lighting=self.gui.extra_data.get("apply_lighting"), light_source=light_source);
-        elif self.gui.extra_data["plot type"] == "checkerboard":
-            return ColorStyle(Styles.CHECKERBOARD, color1=self.gui.extra_data["color 1"], color2=self.gui.extra_data["color 2"],
-                              apply_lighting=self.gui.extra_data.get("apply_lighting"), light_source=light_source);
-        elif self.gui.extra_data["plot type"] == "gradient":
-            return ColorStyle(Styles.GRADIENT, color1=self.gui.extra_data["color 1"], color2=self.gui.extra_data["color 2"],
-                              apply_lighting=self.gui.extra_data.get("apply_lighting"), light_source=light_source);
-        elif self.gui.extra_data["plot type"] == "vertical striped":
-            return ColorStyle(Styles.VERTICAL_STRIPED, color1=self.gui.extra_data["color 1"], color2=self.gui.extra_data["color 2"],
-                              apply_lighting=self.gui.extra_data.get("apply_lighting"), light_source=light_source);
-        elif self.gui.extra_data["plot type"] == "horizontal striped":
-            return ColorStyle(Styles.HORIZONTAL_STRIPED, color1=self.gui.extra_data["color 1"], color2=self.gui.extra_data["color 2"],
-                              apply_lighting=self.gui.extra_data.get("apply_lighting"), light_source=light_source);
-        elif self.gui.extra_data["plot type"] == "value based":
-            return ColorStyle(Styles.VALUE_BASED, base_color=self.gui.extra_data["base color"], apply_lighting=self.gui.extra_data.get("apply_lighting"), light_source=light_source);
-        elif self.gui.extra_data["plot type"] == "color set":
-            return ColorStyle(Styles.COLOR_SET, color_set={-100: self.gui.extra_data["color 1"], -50: self.gui.extra_data["color 2"],
-                                                           0: self.gui.extra_data["color 3"], 50: self.gui.extra_data["color 4"],
-                                                           100: self.gui.extra_data["color 5"]}, step=50,
-                              apply_lighting=self.gui.extra_data.get("apply_lighting"), light_source=light_source);
-        else:
-            style = preset_styles[self.gui.extra_data["plot type"]];
-            style.settings["apply_lighting"] = self.gui.extra_data.get("apply_lighting");
-            style.settings["light_source"] = light_source;
-            return style;
-
-    def get_functions(self, symbols, num_functions):
-        """ get the functions from GUI input """
-        try:
-            parser.redefine_symbols(*symbols);
-            raw_functions = [self.gui.extra_data["function {}".format(i)] for i in range(1, num_functions + 1)];
-            parsed_functions = [parser.parse(func) for func in raw_functions];
-        except UserError as e:
-            self.gui.show_message("Plot failed due to invalid function(s)!", error=True);
-            return False;
-        self.gui.add_to_function_frame(", ".join(raw_functions));
-        return parsed_functions;
-
-    def handle_gui_msg(self):
-        """ Change the plot settings based on interaction with the GUI """
-        if self.gui.update_pending_msg == "NONE":
-            return;
-        if self.gui.update_pending_msg == "UPDATE_PLOT_SETTINGS":
-            self.set_bounds(self.gui.x_start, self.gui.x_stop, self.gui.y_start,
-                            self.gui.y_stop, self.gui.z_start, self.gui.z_stop);
-            for function in self.functions:
-                if isinstance(function, Function3D):
-                    function.anchorize3D(function.x_anchors, function.y_anchors, self.x_start, self.x_stop, self.y_start, self.y_stop);
-                elif isinstance(function, RevolutionSurface):
-                    function.anchorize3D(function.x_anchors, function.y_anchors, 0, 2*pi, self.x_start, self.x_stop);
-                elif isinstance(function, VectorField):
-                    function.set_z_bounds(self.z_start, self.z_stop);
-        elif self.gui.update_pending_msg == "TOGGLE_AXES":
-            self.axes_on = not self.axes_on;
-            self.labels_on = not self.labels_on;
-        elif self.gui.update_pending_msg == "TOGGLE_ANGLES":
-            self.angles_on = not self.angles_on;
-        elif self.gui.update_pending_msg == "TOGGLE_TRACKER":
-            self.tracker_on = not self.tracker_on;
-        elif self.gui.update_pending_msg == "TOGGLE_SPIN":
-            self.spin = not self.spin;
-        elif self.gui.update_pending_msg == "TOGGLE_CUBE":
-            self.cube_on = not self.cube_on;
-        elif self.gui.update_pending_msg == "RESET_PLOTS":
-            self.functions = [];
-            self.gui.reset_function_frame();
-        elif self.gui.update_pending_msg == "NEW_COMPILED_FUNCTION":
-            self.compile_function(self.gui.extra_data["function name"], self.gui.extra_data["function"], self.gui.extra_data["num vars"]);
-
-        elif self.gui.update_pending_msg == "NEW_2D_FUNCTION":
-            func = self.get_functions(["x"], 1);
-            if func:
-                func = func[0];
-                Function2D(self, lambda x: func.evaluate(x=x), line_color_style=self.get_color_style());
-
-        elif self.gui.update_pending_msg == "NEW_3D_FUNCTION":
-            func = self.get_functions(["x", "y"], 1);
-            if func:
-                func = func[0];
-                Function3D(self, lambda x, y: func.evaluate(x=x, y=y), color_style=self.get_color_style());
-
-        elif self.gui.update_pending_msg == "NEW_PARAM1_FUNCTION":
-            functions = self.get_functions(["t"], 3);
-            if functions:
-                func1, func2, func3 = functions;
-                ParametricFunctionT(self, lambda t: (func1.evaluate(t=t), func2.evaluate(t=t), func3.evaluate(t=t)), line_color=self.gui.extra_data["fill color"]);
-
-        elif self.gui.update_pending_msg == "NEW_PARAM2_FUNCTION":
-            functions = self.get_functions(["u", "v"], 3);
-            if functions:
-                func1, func2, func3 = functions;
-                ParametricFunctionUV(self, lambda u, v: (func1.evaluate(u=u, v=v), func2.evaluate(u=u, v=v), func3.evaluate(u=u, v=v)), color_style=self.get_color_style());
-
-        elif self.gui.update_pending_msg == "NEW_REVOLUTION_SURFACE":
-            func = self.get_functions(["x"], 1);
-            if func:
-                func = func[0];
-                RevolutionSurface(self, lambda x: func.evaluate(x=x), color_style=self.get_color_style(), surf_on=True);
-
-        elif self.gui.update_pending_msg == "NEW_CYL_FUNCTION":
-            func = self.get_functions(["z", "t"], 1);
-            if func:
-                func = func[0];
-                CylindricalFunction(self, lambda z, t: func.evaluate(z=z, t=t), color_style=self.get_color_style());
-
-        elif self.gui.update_pending_msg == "NEW_SPH_FUNCTION":
-            func = self.get_functions(["t", "p"], 1);
-            if func:
-                func = func[0];
-                SphericalFunction(self, lambda t, p: func.evaluate(t=t, p=p), color_style=self.get_color_style());
-
-        elif self.gui.update_pending_msg == "NEW_VECTOR_FIELD":
-            functions = self.get_functions(["x", "y", "z"], 3);
-            if functions:
-                func1, func2, func3 = functions;
-                VectorField(self, lambda x, y, z: (func1.evaluate(x=x, y=y, z=z), func2.evaluate(x=x, y=y, z=z), func3.evaluate(x=x, y=y, z=z)), color_style=self.get_color_style());
-
-
-        self.gui.update_pending_msg = "NONE";
-        self.gui.extra_data = {};
-        self.needs_update = True;
-
     def get_average_update_time(self):
         """ get the average time the plot has taken to update """
         return self.time / self.updates;
 
     def update(self):
         """ update all the graphs and everything in the plot """
-        #if self.gui is not None: self.handle_gui_msg();
         if self.needs_update:
             initial_time = time.time()
             self.surface.fill(self.background);

@@ -17,6 +17,12 @@ class CylindricalFunction(ParametricFunctionUV):
         ParametricFunctionUV.__init__(self, plot, parametric_function, color_style, u_start=z_start, u_stop=z_stop, v_start=theta_start, v_stop=theta_stop,
                                       u_anchors=z_anchors, v_anchors=theta_anchors, mesh_on=mesh_on, surf_on=surf_on, mesh_weight=mesh_weight, mesh_color=mesh_color);
 
+    @classmethod
+    def make_function_string(cls, funcs):
+        """ return a callable function from a string specific to the type of Plottable. to be overridden """
+        func = funcs[0];
+        return lambda z, t: func.evaluate(z=z, t=t);
+
 
 class SphericalFunction(ParametricFunctionUV):
 
@@ -31,14 +37,20 @@ class SphericalFunction(ParametricFunctionUV):
         ParametricFunctionUV.__init__(self, plot, parametric_function, color_style, u_start=theta_start, u_stop=theta_stop, v_start=phi_start, v_stop=phi_stop,
                                       u_anchors=theta_anchors, v_anchors=phi_anchors, mesh_on=mesh_on, surf_on=surf_on, mesh_weight=mesh_weight, mesh_color=mesh_color);
 
+    @classmethod
+    def make_function_string(cls, funcs):
+        """ return a callable function from a string specific to the type of Plottable. to be overridden """
+        func = funcs[0];
+        return lambda t, p: func.evaluate(t=t, p=p);
+
 
 class PolarFunction(Plottable):
 
     """ A function of polar coordinates """
 
-    def __init__(self, plot, function, color=(255, 0, 255), theta_start=-pi, theta_stop=pi, step=0.1, line_weight=1):
-        Plottable.__init__(self, plot, function, ColorStyle(Styles.SOLID, color=color));
-        self.color = color;
+    def __init__(self, plot, function, color_style=preset_styles["default"], theta_start=-pi, theta_stop=pi, step=0.1, line_weight=1):
+        Plottable.__init__(self, plot, function, color_style);
+        self.color = color_style.settings["color"];
         self.theta_start, self.theta_stop = theta_start, theta_stop;
         self.step = 0.1;
         self.line_weight = line_weight;
@@ -56,3 +68,9 @@ class PolarFunction(Plottable):
                 last_point = new_point;
             except:
                 last_point = None;
+
+    @classmethod
+    def make_function_string(cls, funcs):
+        """ return a callable function from a string specific to the type of Plottable. to be overridden """
+        func = funcs[0];
+        return lambda t: func.evaluate(t=t);

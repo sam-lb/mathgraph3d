@@ -1,6 +1,6 @@
 from global_imports import *;
 from Plottable import Plottable;
-from Color import Styles, ColorStyle;
+from Color import Styles, ColorStyle, preset_styles;
 
 
 # A good explanation of marching squares can be found here:
@@ -56,9 +56,9 @@ class ImplicitPlot2D(Plottable):
     evaluate() method as the function parameter.
     """
 
-    def __init__(self, plot, function, color=(255, 0, 0), line_weight=1, squares_x=300, squares_y=300):
-        Plottable.__init__(self, plot, function, ColorStyle(Styles.SOLID, color=color));
-        self.color, self.line_weight, = color, line_weight;
+    def __init__(self, plot, function, color_style=preset_styles["default"], line_weight=1, squares_x=100, squares_y=100):
+        Plottable.__init__(self, plot, function, color_style);
+        self.color, self.line_weight, = color_style.settings["color"], line_weight;
         self.squares_x, self.squares_y = squares_x, squares_y;
         self.x_step, self.y_step = self.plot.units_x / squares_x, self.plot.units_y / squares_y;
         self.segments = [];
@@ -76,12 +76,13 @@ class ImplicitPlot2D(Plottable):
             for y in drange(self.plot.y_start, self.plot.y_stop + self.y_step, self.y_step):
                 try:
                     z = self.function(x, y);
-                    #row.append(int(z > 0));
-                    row.append((x, y, z));
+                    row.append(int(z > 0));
+                    #row.append((x, y, z));
                 except Exception:
-                    row.append((x, y, 0));
+                    #row.append((x, y, 0));
+                    row.append(0);
             field.append(row);
-        print(len(field[0]));
+##        print(len(field[0]));
         return field;
 
     def midpoint(self, A, B):
@@ -95,31 +96,41 @@ class ImplicitPlot2D(Plottable):
 
     def march_squares(self):
         """ run the marching squares algorithm on the function's scalar field """
-        #half_x, half_y = self.plot.units_x / 2, self.plot.units_y / 2;
-        #pos_func = lambda i, j: (i * self.x_step, j * self.y_step);
+        half_x, half_y = self.plot.units_x / 2, self.plot.units_y / 2;
+        pos_func = lambda i, j: (i * self.x_step - half_x, j * self.y_step - half_y);
         field = self.generate_scalar_field();
         
         for i, row in enumerate(field[1:], start=1):
             for j in range(1, len(row)):
                 cell = field[i-1][j-1], field[i][j-1], field[i][j], field[i-1][j];
-                #code = self.calculate_lookup_code(cell);
-                code = self.calculate_lookup_code((int(z[2] > 0) for z in cell));
-                #cell = pos_func(i-1, j), pos_func(i, j), pos_func(i, j-1), pos_func(i-1, j-1);
+                code = self.calculate_lookup_code(cell);
+##                code = self.calculate_lookup_code((int(z[2] > 0) for z in cell));
+                cell = pos_func(i-1, j), pos_func(i, j), pos_func(i, j-1), pos_func(i-1, j-1);
                 for line in LOOKUP_TABLE_2D[code]:
+##                    try:
+##                        m1 = self.interpolate(cell[line[0][0]], cell[line[0][1]]);
+##                        m2 = self.interpolate(cell[line[1][0]], cell[line[1][1]]);
+##                    except ZeroDivisionError:
+##                        continue;
                     try:
-                        m1 = self.interpolate(cell[line[0][0]], cell[line[0][1]]);
-                        m2 = self.interpolate(cell[line[1][0]], cell[line[1][1]]);
-                    except ZeroDivisionError:
-                        continue;
-##                    m1 = self.midpoint(cell[line[0][0]], cell[line[0][1]]);
-##                    m2 = self.midpoint(cell[line[1][0]], cell[line[1][1]]);
-                    self.segments.append(Segment(m1, m2, self.color));
-                    print(m1, m2);
+                        m1 = self.midpoint(cell[line[0][0]], cell[line[0][1]]);
+                        m2 = self.midpoint(cell[line[1][0]], cell[line[1][1]]);
+                        self.segments.append(Segment((m1[0], m1[1], 0), (m2[0], m2[1], 0), self.color));
+                    except IndexError:
+                        print(cell[line[0][0]], cell[line[0][1]], cell[line[1][0]], cell[line[1][1]]);
+                        raise;
+##                    print(m1, m2);
 ##                    self.segments.append(Segment((m1[0] - half_x, m1[1] - half_y, 0), (m2[0] - half_x, m2[1] - half_y, 0), self.color));
         del field;
-        print(len(self.segments));
+##        print(len(self.segments));
         self.segments = tuple(self.segments);
 
     def draw(self):
         for segment in self.segments:
             segment.draw(self.plot, self.line_weight);
+
+    @classmethod
+    def make_function_string(cls, funcs):
+        """ return a callable function from a string specific to the type of Plottable. to be overridden """
+        func = funcs[0];
+        return lambda x, y: func.evaluate(x=x, y=y);

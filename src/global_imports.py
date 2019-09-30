@@ -1,5 +1,6 @@
 import math, random, pygame;
-from math import sin, cos, tan, sqrt, hypot, pi;
+from math import sin, cos, tan, sqrt, hypot, pi, atan2;
+import cmath;
 from random import randint;
 from decimal import Decimal;
 
@@ -13,6 +14,11 @@ ALLOWED_FUNCTIONS = {
     "max": lambda a, b: max(a, b), "min": lambda a, b: min(a, b),
     "log": math.log, "exp": math.exp,
 }
+
+ALLOWED_COMPLEX_FUNCTIONS = {
+    "sin": cmath.sin, "cos": cmath.cos, "tan": cmath.tan, "sqrt": cmath.sqrt,
+    "abs": abs, "exp": cmath.exp,
+};
 
 TWO_PI = 2 * pi;
 HALF_PI = pi / 2;
@@ -62,6 +68,10 @@ def text(text, x, y, surface, color=(255, 255, 255)):
 def create_text_surface(text, size, color):
     """ creates a surface with text on it """
     return pygame.font.SysFont("arial", size).render(text, 1, color);
+
+def distance2D(A, B):
+    """ calculates the distance between 2 2D points """
+    return math.hypot(A[0] - B[0], A[1] - B[1]);
 
 def distance3D(A, B):
     """ calculates the distance between 2 3D points """
