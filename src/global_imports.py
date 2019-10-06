@@ -89,6 +89,22 @@ def quad_midpoint(A, B, C, D):
     """ calculate the center of a quadrilateral """
     return midpoint(midpoint(A, B), midpoint(C, D));
 
+def polygon_midpoint(points):
+    """ calculate the center of a polygon """
+    z = len(points);
+    return (sum((p[0] for p in points)) / z,
+            sum((p[1] for p in points)) / z,
+            sum((p[2] for p in points)) / z,);
+
+def generate_approach_amount(A, B, nsteps=15):
+    """ generate a dx and dy value between A and B with nsteps steps """
+    x0, y0, x1, y1 = *A, *B;
+    return (x0 - x1) / nsteps, (y0 - y1) / nsteps;
+
+def approach(B, dx, dy):
+    """ add dx and dy to point B's coordinates """
+    return B[0] + dx, B[1] + dy;
+
 def constrain(x, min_=0, max_=255):
     """ constrain a number between two values """
     return min(max_, max(min_, x));

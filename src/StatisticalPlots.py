@@ -49,8 +49,7 @@ class StatPlot2D(_StatPlot):
 
     """ class for 2D plots created from statistical data """
 
-    def __init__(self, plot, file, line_color=(255, 0, 0), point_color=(0, 0, 0), line_weight=1, points_on=True, lines_on=True):
-        color_style = ColorStyle(Styles.SOLID, color=line_color);
+    def __init__(self, plot, file, color_style=preset_styles["default"], point_color=(0, 0, 0), line_weight=1, points_on=True, lines_on=True):
         _StatPlot.__init__(self, plot, file, color_style);
         self.line_weight = line_weight;
         self.point_color = point_color;

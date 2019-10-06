@@ -1,5 +1,5 @@
 import tkinter as tk;
-import os, sys, time, cmath, ctypes;
+import os, sys, time, ctypes;
 from scipy.special import gamma;
 from global_imports import *;
 from Color import ColorStyle, Styles, Gradient, preset_styles, random_color;
@@ -12,7 +12,7 @@ from ImplicitPlots import ImplicitPlot2D;
 from ComplexFunctions import ComplexFunction;
 from RecurrenceRelation import RecurrenceRelation;
 from Plot import Plot;
-from GUI import PlotCreator, Interface;
+from GUI import Interface;
 
 ALPHA_INCREMENT, BETA_INCREMENT = 0.1, 0.1;
 INITIAL_ALPHA, INITIAL_BETA = 0.5, 0.8;
@@ -28,7 +28,7 @@ def on_close():
     root.destroy();
 
 def main():
-    WIDTH, HEIGHT = 630, 500;#683, 768;
+    WIDTH, HEIGHT = 683, 768;
     GUI = True;
     TESTING = False;
 
@@ -43,7 +43,6 @@ def main():
         root = tk.Tk();
         root.config(background="#ddddff");
         root.state("zoomed");
-        #embed = PlotCreator(root, width=WIDTH, height=HEIGHT); # add the GUI thing in Plot.update back
         embed = Interface(root, width=WIDTH, height=HEIGHT);
         embed.grid(row=0, column=0, rowspan=6, padx=10);
         os.environ["SDL_WINDOWID"] = str(embed.winfo_id());
@@ -93,7 +92,8 @@ def main():
 ##    Function3D(plot, function, color_style=ColorStyle(Styles.SOLID, color=(200, 200, 255)));
 ##    VectorField.slope_field_of(plot, function, vecs_per_unit=2);
 ##    ComplexFunction(plot, cmath.exp, mesh_on=False, real_anchors=64, imag_anchors=64);
-##    ComplexFunction(plot, gamma, mesh_on=False, real_anchors=64, imag_anchors=64);
+##    ComplexFunction(plot, cmath.asin, mesh_on=True, real_anchors=32, imag_anchors=32, detection=True);
+##    ComplexFunction(plot, cmath.sin);
 
 ##    func = lambda x, y: cos(x**2+y);
 ##    tangent = plot.tangent_plane(func, 0, 1);
@@ -148,7 +148,7 @@ def main():
             if running and GUI: root.update();
         except Exception as e:
             pygame.quit();
-            raise e;
+            
         total_time += time.time() - initial_time;
         loops += 1;
     pygame.quit();

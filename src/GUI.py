@@ -1,4 +1,5 @@
 import tkinter as tk;
+import webbrowser;
 from tkinter.colorchooser import askcolor;
 from tkinter.messagebox import showinfo;
 from Color import preset_styles;
@@ -15,7 +16,9 @@ from OtherCoordinateSystems import CylindricalFunction, SphericalFunction, Polar
 from ImplicitPlots import ImplicitPlot2D;
 from ComplexFunctions import ComplexFunction;
 from RecurrenceRelation import RecurrenceRelation;
+from Point import Point;
 from Plot import Plot;
+from Errors import GrapherError;
 
 from pygame import Color;
 from pprint import pprint;
@@ -89,7 +92,7 @@ PLOT_OBJECTS = [
     RevolutionSurface, CylindricalFunction, SphericalFunction,
     VectorField, PolarFunction, RecurrenceRelation, ImplicitPlot2D,
     ComplexFunction, VectorField.slope_field_of, StatPlot2D, StatPlot3D,
-    Plot.add_point, Plot.plane_from_3_points, Plot.tangent_plane,
+    Point, Plot.plane_from_3_points, Plot.tangent_plane,
 ];
 
 COLOR_TYPES = [
@@ -141,12 +144,14 @@ class Interface(tk.Frame):
 
     def create_widgets(self):
         """ create widgets for plot bounds, toggles for axes, angles, tracker, spin, and buttons to draw new plots """
-        tk.Button(self.master, text="Plot settings", background=BUTTON_COLOR, command=lambda: PlotSettingsWindow(self)).grid(row=0, column=3);
         self.plot_to_open = tk.StringVar(self, value="Add a new object to the plot");
         menu = tk.OptionMenu(self.master, self.plot_to_open, *OBJECT_TYPES, command=self.on_new_plot);
         menu.configure(background=BUTTON_COLOR);
-        menu.grid(row=1, column=3);
+        menu.grid(row=0, column=3);
         self.create_function_frame();
+        self.create_plot_settings();
+        tk.Button(self.master, text="Website", command=lambda: webbrowser.open_new_tab("http://sambrunacini.com/")).grid(row=3, column=3, sticky=tk.N);
+        tk.Label(self.master, text="Created by Sam Brunacini").grid(row=4, column=3, sticky=tk.N);
 
     def on_new_plot(self, event):
         """ called when the user selects a new plot to add """
@@ -162,6 +167,36 @@ class Interface(tk.Frame):
         self.function_frame.grid(row=0, column=2, rowspan=6, sticky=tk.N+tk.S+tk.W+tk.E);
         self.function_frame.grid_columnconfigure(0, weight=1);
         self.function_frame_row = 1;
+
+    def create_plot_settings(self):
+        # bound zoom, scale zoom, background color?, axes, angles, labels, cube,
+        # spin, line numbers, ticks
+        self.plot_options_frame = tk.Frame(self.master, borderwidth=3, relief="groove", background=SUBFRAME_COLOR);
+        tk.Label(self.plot_options_frame, text="Plot settings").grid(row=0, column=0, columnspan=4);
+        tk.Button(self.plot_options_frame, text="scale up", command=lambda: self.plot.zoom(20)).grid(row=1, column=0);
+        tk.Button(self.plot_options_frame, text="scale down", command=lambda: self.plot.zoom(-20)).grid(row=1, column=1);
+        tk.Button(self.plot_options_frame, text="zoom in", command=lambda: self.plot.set_bounds(self.plot.x_start + 1,
+                                                                                                self.plot.x_stop - 1,
+                                                                                                self.plot.y_start + 1,
+                                                                                                self.plot.x_stop - 1,
+                                                                                                self.plot.z_start + 1,
+                                                                                                self.plot.z_stop - 1,
+                                                                                                anch=True)).grid(row=1, column=2);
+        tk.Button(self.plot_options_frame, text="zoom out", command=lambda: self.plot.set_bounds(self.plot.x_start - 1,
+                                                                                                 self.plot.x_stop + 1,
+                                                                                                 self.plot.y_start - 1,
+                                                                                                 self.plot.y_stop + 1,
+                                                                                                 self.plot.z_start - 1,
+                                                                                                 self.plot.z_stop + 1,
+                                                                                                 anch=True)).grid(row=1, column=3, pady=25);
+        tk.Button(self.plot_options_frame, text="toggle axes", command=self.plot.toggle_axes).grid(row=2, column=0);
+        tk.Button(self.plot_options_frame, text="toggle angles", command=self.plot.toggle_angles).grid(row=2, column=1);
+        tk.Button(self.plot_options_frame, text="toggle labels", command=self.plot.toggle_labels).grid(row=2, column=2);
+        tk.Button(self.plot_options_frame, text="toggle cube", command=self.plot.toggle_cube).grid(row=2, column=3, pady=25);
+        tk.Button(self.plot_options_frame, text="toggle spin", command=self.plot.toggle_spin).grid(row=3, column=0);
+        tk.Button(self.plot_options_frame, text="toggle line numbers", command=self.plot.toggle_line_numbers).grid(row=3, column=1, columnspan=2);
+        tk.Button(self.plot_options_frame, text="toggle ticks", command=self.plot.toggle_ticks).grid(row=3, column=3, pady=25);
+        self.plot_options_frame.grid(row=1, column=3, sticky=tk.N);
 
     def add_object(self, object_type):
         """ Add an object to the plot, and create the settings widget for it in the GUI """
@@ -207,29 +242,37 @@ class GraphObjectSettingsWindow(tk.Toplevel):
             self.after(blink_length, lambda: self.configure(background=BLINK_COLOR));
             self.after(blink_length, lambda: self.configure(background=SUBFRAME_COLOR));
 
-    def create_input_box(self, frame, label, row):
+    def create_input_box(self, frame, label, row, v=None):
         """ create a text input box and a label for it """
         tk.Label(frame, text=label).grid(row=row, column=0, sticky=tk.W);
         sv = tk.StringVar(frame);
+        if v is not None:
+            sv.set(v);
         self.text_inputs[label] = sv;
         self.add_data(label, sv);
         tk.Entry(frame, textvariable=sv).grid(row=row, column=1, sticky=tk.W);
 
     def create_widgets(self):
         """ generate widgets from self.data """
+        edit = self.associated_object.obj_data != dict();
+        
         row = 2;
         tk.Label(self, text=self.object_type).grid(row=0, column=0, sticky=tk.W);
         tk.Label(self, text=self.data[0], wraplength=300, justify=tk.LEFT).grid(row=1, column=0, sticky=tk.W);
         input_frame = tk.Frame(self, borderwidth=3, relief="groove", background=SUBFRAME_COLOR);
         for i, prompt in enumerate(self.data[1]):
-            self.create_input_box(input_frame, prompt, i);
+            v = None if not edit else self.associated_object.obj_data[prompt].get();
+            self.create_input_box(input_frame, prompt, i, v);
         input_frame.grid(row=row, sticky=tk.W);
         row += 1;
             
         self.style = tk.StringVar(self, value="select...");
-        self.add_data("style", self.style);
         color_frame = tk.Frame(self, borderwidth=3, relief="groove", background=SUBFRAME_COLOR);
-        
+        if edit:
+            self.style.set(self.associated_object.obj_data["style"].get());
+            self.color_style_set(color_frame, 0, edit=True);
+        self.add_data("style", self.style);
+
         if self.data[2]: # solid only
             self.style.set("solid"); 
             self.color_style_set(color_frame, 0);
@@ -245,21 +288,37 @@ class GraphObjectSettingsWindow(tk.Toplevel):
 
         if self.data[4]:
             mesh, surf = tk.IntVar(self), tk.IntVar(self);
-            mesh.set(1); surf.set(1);
+            if edit:
+                mesh.set(self.associated_object.obj_data["mesh"].get());
+                surf.set(self.associated_object.obj_data["surf"].get());
+            else:
+                mesh.set(1); surf.set(1);
+                
             self.add_data("mesh", mesh);
             self.add_data("surf", surf);
             tk.Checkbutton(self, text="Mesh", var=mesh).grid(row=row, sticky=tk.W);
             tk.Checkbutton(self, text="Surface", var=surf).grid(row=row+1, sticky=tk.W);
             row += 2;
 
-        tk.Button(self, text="Add to Plot", command=self.on_complete).grid(row=row);
+        if edit:
+            tk.Button(self, text="Save edits", command=self.on_edit).grid(row=row);
+        else:
+            tk.Button(self, text="Add to Plot", command=self.on_complete).grid(row=row);
 
-    def color_box(self, frame, row, text="Color: ", data_name="fill color"):
+    def color_box(self, frame, row, text="Color: ", data_name="fill color", edit=False):
         """ create widgets for a color picker """
         def on_color_select(cbox, canv, ask=True):
-            nonlocal self;
-            if ask: color = askcolor(initialcolor="red", parent=self)[1];
-            else: color="#ff0000";
+            nonlocal self, edit;
+            if ask:
+                color = askcolor(initialcolor="red", parent=self)[1];
+            elif edit:
+                color = "#";
+                for color_component in self.associated_object.obj_data[data_name]:
+                    subc = hex(color_component)[2:];
+                    if len(subc) == 1: subc = "0" + subc;
+                    color += subc;
+            else:
+                color="#ff0000";
             if not color: return;
 
             cbox.configure(text=color);
@@ -278,7 +337,7 @@ class GraphObjectSettingsWindow(tk.Toplevel):
         """ Add data to the GraphObject associated with this window """
         self.associated_object.obj_data[name] = value;
 
-    def color_style_set(self, frame, row):
+    def color_style_set(self, frame, row, edit=False):
         """ Set the widgets when a ColorStyle is chosen """
         value = self.style.get();
         
@@ -289,19 +348,21 @@ class GraphObjectSettingsWindow(tk.Toplevel):
         if color_count is None:
             tk.Label(frame, text="select preset: ").grid(row=row);
             preset = tk.StringVar(frame, value="tmp");
+            if edit: preset.set(self.associated_object.obj_data["preset"].get());
             self.add_data("preset", preset);
             tk.OptionMenu(frame, preset, *sorted(preset_styles.keys()), command=lambda event: None).grid(row=row, column=1);
         else:
             for i in range(1, color_count[1] + 1):
-                self.color_box(frame, row, text="Color {}: ".format(i), data_name="color {}".format(i));
+                self.color_box(frame, row, text="Color {}: ".format(i), data_name="color {}".format(i), edit=edit);
                 row += 1;
             if self.data[3]:
                 lighting = tk.IntVar(frame);
+                if edit: lighting.set(self.associated_object.obj_data["lighting"].get());
                 tk.Checkbutton(frame, text="Apply lighting", var=lighting).grid(row=row);
                 self.add_data("lighting", lighting);
                 row += 1;
 
-    def on_complete(self):
+    def on_complete(self, edit=False):
         """ handle when the user tries to add the object to the plot """
         if not all((box.get() for box in self.text_inputs.values())):
             self.enforce = False;
@@ -309,10 +370,16 @@ class GraphObjectSettingsWindow(tk.Toplevel):
             self.focus_force();
             self.enforce = True;
         else:
+            if edit: prev_obj = self.associated_object.obj;
             success = self.associated_object.build_object();
             if success:
-                self.associated_object.show();
+                if edit: self.associated_object.parent.plot.functions.remove(prev_obj);
+                self.associated_object.show(edit);
                 self.destroy();
+
+    def on_edit(self):
+        """ handle when the user is done editing the object """
+        self.on_complete(edit=True);
             
 
 class GraphObject:
@@ -329,13 +396,27 @@ class GraphObject:
         self.type_data = OBJECT_DATA[self.object_type];
         self.obj_data = {};
 
-    def show(self):
+    def show(self, edit=False):
         """ show the graph object widget """
+        if edit:
+            for widget in self.frame.winfo_children(): widget.destroy();
         tk.Label(self.frame, text=self.object_type).grid(row=0, column=0);
         functions = "\n".join((" ".join(f) for f in zip(self.type_data[1], [self.obj_data[prompt].get() for prompt in self.type_data[1]])));
         tk.Label(self.frame, text=functions).grid(row=1, column=0, sticky=tk.W);
-        # put edit button in column 2 sticky tk.E
+        tk.Button(self.frame, text="Edit", command=self.on_edit).grid(row=0, column=1, sticky=tk.E);
+        tk.Button(self.frame, text="Delete", command=self.on_delete).grid(row=0, column=2, sticky=tk.E);
         self.frame.grid(row=self.row, column=0, sticky=tk.E+tk.W);
+
+    def on_edit(self):
+        """ Handle when the edit button is pressed """
+        self.parent.GOSWin = GraphObjectSettingsWindow(self.parent, self.object_type, self);
+
+    def on_delete(self):
+        """ Handle when the delete button is pressed """
+        self.parent.plot.functions.remove(self.obj);
+        self.parent.GOSWin.associated_object = None;
+        self.frame.destroy();
+        self.parent.plot.needs_update = True;
         
     def build_ColorStyle(self):
         """ Create the ColorStyle object from the data """
@@ -377,6 +458,8 @@ class GraphObject:
             if funcs:
                 if self.object_type == "Implicit 2D plot":
                     function = self.type_data[6].make_function_string([Manipulator.move_all_terms_to_left(funcs[0], funcs[1])]);
+                elif self.object_type == "Slope field":
+                    function = Function3D.make_function_string(funcs);
                 else:
                     function = self.type_data[6].make_function_string(funcs);
                     
@@ -391,9 +474,56 @@ class GraphObject:
                 self.obj = self.type_data[6](**params);
                 return True;
         else:
-            pass;
-        
+            params = {};
+            if self.object_type in ("2D stat plot", "3D stat plot"):
+                try:
+                    params["plot"] = plot;
+                    params["color_style"] = color_style;
+                    params["file"] = self.obj_data["Enter file name: "].get();
+                    if self.type_data[4]:
+                        params["mesh_on"] = self.obj_data["mesh"].get();
+                        params["surf_on"] = self.obj_data["surf"].get();
+                    self.obj = self.type_data[6](**params);
+                    return True;
+                except GrapherError:
+                    self.parent.show_message("File not found. Try the full path? (Note that only csv files with numerical comma separated data work)", callback=self.parent.GOSWin.lift);
+                    return False;
+            elif self.object_type == "Point":
+                point = self.build_point(self.obj_data["Enter point in (x, y, z) format: "].get());
+                if point:
+                    self.type_data[6](plot, point, self.obj_data["color 1"]);
+                    return True;
+            elif self.object_type == "Plane":
+                points = [self.build_point(self.obj_data[prompt].get()) for prompt in self.type_data[1]];
+                if points:
+                    try:
+                        function = self.type_data[6](*points);
+                    except ValueError:
+                        self.parent.show_message("Points are colinear, the points are not unique, or the plane is vertical - plane could not be constructed.", callback=self.parent.GOSWin.lift);
+                        return False;
+                    self.obj = Function3D(plot, function, color_style=color_style, mesh_on=self.obj_data["mesh"].get(), surf_on=self.obj_data["surf"].get());
+                    return True;
+            elif self.object_type == "Tangent Plane":
+                expression_parser.redefine_symbols(*self.type_data[5]);
+                try:
+                    function = Function3D.make_function_string([expression_parser.parse(self.obj_data["f(x,y)="].get())]);
+                    x, y = map(lambda x: numerical_parser.parse(x).evaluate(), (self.obj_data["x="].get(), self.obj_data["y="].get()));
+                except Exception:
+                    self.parent.show_message("Function or (x,y) is invalid.", error=True, callback=self.parent.GOSWin.lift);
+                else:
+                    tangent_plane = self.type_data[6](function, x, y);
+                    self.obj = Function3D(plot, tangent_plane, color_style=color_style, mesh_on=self.obj_data["mesh"].get(), surf_on=self.obj_data["surf"].get());
+                    return True;
         return False;
+
+    def build_point(self, point_string):
+        """ build a point from a string """
+        try:
+            point = tuple(map(lambda pc: numerical_parser.parse(pc).evaluate(), point_string[1:][:-1].split(",")));
+        except Exception:
+            self.parent.show_message("Invalid point! must be in (x, y, z) format.", error=True, callback=self.parent.GOSWin.lift);
+            return False;
+        return point;
 
     def build_functions(self, symbols, num_functions):
         """ build the functions from GUI input """

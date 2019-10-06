@@ -26,12 +26,40 @@ class Plottable():
         pn, pm = (h_stop - h_start) / h_anchors, (v_stop - v_start) / v_anchors;
         anchors = [];
         needs_detection = False;
+        last_defined_point = None;
         
         for x in drange(v_start, v_stop + pm, pm):
             row = [];
             for y in drange(h_start, h_stop + pn, pn):
                 try:
+
+##                    x0, y0 = x, y;
+##                    define = True;
+##                    if last_defined_point is not None: dx, dy = generate_approach_amount(last_defined_point, (x0, y0), 12);
+##                    for i in range(10):
+##                        try:
+##                            value = self.function(x0, y0)
+##                        except ValueError:
+##                            if last_defined_point is not None:
+##                                x0, y0 = approach((x0, y0), dx, dy);
+##                                p = self.plot.screen_point(x0, y0, 0);
+##                                pygame.draw.rect(self.plot.surface, random_color(), (p[0], p[1], 2, 2));
+##                                pygame.display.flip();
+##                                pygame.time.delay(50);
+##                            define = False;
+##                            last_defined_point = None;
+##                        else:
+##                            p = self.plot.screen_point(x0, y0, 0);
+##                            pygame.draw.rect(self.plot.surface, (255, 0, 0), (p[0], p[1], 2, 2));
+##                            pygame.display.flip();
+##                            pygame.time.delay(10);
+##                            break;
+##                    else:
+##                        continue;
+##                    if define:
+##                        last_defined_point = (x0, y0);
                     value = self.function(x, y);
+                    
                     if isinstance(value, complex):
                         continue;
                     elif isinstance(value, float) or isinstance(value, int):
@@ -54,6 +82,8 @@ class Plottable():
                             self.min_value = z;
                         point = value;
                     row.append(point);
+                except ValueError as e:
+                    pass;
                 except ZeroDivisionError as e:
                     needs_detection = True;
                 except Exception as e:
@@ -66,37 +96,54 @@ class Plottable():
         last_AB, last_AC, polys = None, None, [];
         for i, row in enumerate(anchors[1:], start=1):
             for j, pt in enumerate(row[1:], start=1):
-                try:
-                    A = anchors[i][j-1];
-                    B = pt;
-                    C = anchors[i-1][j];
-                    D = anchors[i-1][j-1];
-                    M = quad_midpoint(A, B, C, D);
+                points = [];
+                for a, b in ((i, j-1), (i, j), (i-1, j), (i-1, j-1)):
+                    try:
+                            points.append(anchors[a][b]);
+                    except IndexError:
+                        continue;
 
-                    if self.max_value > self.plot.z_stop or self.min_value < self.plot.z_start:
-                        points = self.super_sub_clip([A, B, C, D], self.plot.z_stop, self.plot.z_start);
-                        if len(points) == 0: continue;
-                    else:
-                        points = [A, B, C, D];
-                                
-
-                    if needs_detection:
-                        AB, AC = distance3D(A, B), distance3D(A, C);
-                        if last_AB is None:
-                            last_AB, last_AC = AB, AC;
-                        else:
-                            if abs(last_AB-AB) > 1.7 or abs(last_AC-AC) > 1.7:
-                                continue;
-
-                    color = self.color_style.next_color(i=i, j=j, point=M, min_=self.min_value, max_=self.max_value, value=M[2]);
-                    polys.append(SubPolygon(color, points, M, i, j));
-                    #pygame.display.update(pygame.draw.polygon(self.plot.surface, (255, 255, 255), list(map(lambda p: self.plot.screen_point(*p), points)), 1));
-                    #pygame.time.delay(50);
-                except IndexError as e:
-                    pass;
-                
+                if len(points) <= 2: continue;
+                M = polygon_midpoint(points);
+                if self.max_value > self.plot.z_stop or self.min_value < self.plot.z_start:
+                    points = self.super_sub_clip(points, self.plot.z_stop, self.plot.z_start);
+                    if len(points) == 0: continue;
+                color = self.color_style.next_color(i=i, j=j, point=M, min_=self.min_value, max_=self.max_value, value=M[2]);
+                polys.append(SubPolygon(color, points, M, i, j));
         polys = tuple(polys);
         return polys;
+                    
+##                    A = anchors[i][j-1];
+##                    B = pt;
+##                    C = anchors[i-1][j];
+##                    D = anchors[i-1][j-1];
+##                    
+##                    M = quad_midpoint(A, B, C, D);
+##
+##                    if self.max_value > self.plot.z_stop or self.min_value < self.plot.z_start:
+##                        points = self.super_sub_clip([A, B, C, D], self.plot.z_stop, self.plot.z_start);
+##                        if len(points) == 0: continue;
+##                    else:
+##                        points = [A, B, C, D];
+##                                
+##
+##                    if needs_detection:
+##                        AB, AC = distance3D(A, B), distance3D(A, C);
+##                        if last_AB is None:
+##                            last_AB, last_AC = AB, AC;
+##                        else:
+##                            if abs(last_AB-AB) > 1.7 or abs(last_AC-AC) > 1.7:
+##                                continue;
+##
+##                    color = self.color_style.next_color(i=i, j=j, point=M, min_=self.min_value, max_=self.max_value, value=M[2]);
+##                    polys.append(SubPolygon(color, points, M, i, j));
+##                    #pygame.display.update(pygame.draw.polygon(self.plot.surface, (255, 255, 255), list(map(lambda p: self.plot.screen_point(*p), points)), 1));
+##                    #pygame.time.delay(50);
+##                except IndexError as e:
+##                    pass;
+##                
+##        polys = tuple(polys);
+##        return polys;
 
     def point_constant_intersection(self, in_point, out_point, constant=None):
         if constant is None: constant = self.plot.z_stop;

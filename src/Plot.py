@@ -31,8 +31,8 @@ class Plot():
         self.tracker_on, self.spin = tracker_on, spin;
         self.line_numbers, self.line_number_freq = line_numbers, line_number_freq;
         self.ticks = ticks;
-        self.set_bounds(x_start, x_stop, y_start, y_stop, z_start, z_stop);
         self.functions, self.points, self.shapes = [], [], [];
+        self.set_bounds(x_start, x_stop, y_start, y_stop, z_start, z_stop);
         self.alpha, self.beta = alpha, beta;
         self.get_unit_vectors();
         self.get_sortbox();
@@ -42,14 +42,60 @@ class Plot():
         self.x_axis_color, self.y_axis_color, self.z_axis_color = x_axis_color, y_axis_color, z_axis_color;
         self.needs_update = True;
 
-    def set_bounds(self, x_start, x_stop, y_start, y_stop, z_start, z_stop):
+    def set_bounds(self, x_start, x_stop, y_start, y_stop, z_start, z_stop, anch=False):
         """ set the bounds of the Plot and calculate the pixel scales """
+        if any(map(lambda o: o == 0, (x_start, x_stop, y_start, y_stop, z_start, z_stop))) and anch:
+            return;
+        
         scaler = lambda u: 2 * self.axis_length / u;
         self.x_start, self.x_stop = x_start, x_stop;
         self.y_start, self.y_stop = y_start, y_stop;
         self.z_start, self.z_stop = z_start, z_stop;
         self.units_x, self.units_y, self.units_z = x_stop - x_start, y_stop - y_start, z_stop - z_start;
         self.x_scale, self.y_scale, self.z_scale = map(scaler, (self.units_x, self.units_y, self.units_z));
+
+        if anch:
+            for function in self.functions:
+                if isinstance(function, (Function3D)):
+                    function.anchorize3D(function.x_anchors,
+                                         function.y_anchors,
+                                         self.x_start, self.x_stop,
+                                         self.y_start, self.y_stop);
+        self.needs_update = True;
+
+    def toggle_axes(self):
+        """ toggle the axes """
+        self.axes_on = not self.axes_on;
+        self.needs_update = True;
+
+    def toggle_angles(self):
+        """ toggle the angles text """
+        self.angles_on = not self.angles_on;
+        self.needs_update = True;
+
+    def toggle_labels(self):
+        """ toggle the axis labels """
+        self.labels_on = not self.labels_on;
+        self.needs_update = True;
+
+    def toggle_cube(self):
+        """ toggle the cube """
+        self.cube_on = not self.cube_on;
+        self.needs_update = True;
+
+    def toggle_spin(self):
+        """ toggle the spin """
+        self.spin = not self.spin;
+        self.needs_update = True;
+
+    def toggle_line_numbers(self):
+        """ toggle the line numbers """
+        self.line_numbers = not self.line_numbers;
+        self.needs_update = True;
+
+    def toggle_ticks(self):
+        """ toggle the axes """
+        self.ticks = not self.ticks;
         self.needs_update = True;
 
     def add_function(self, function):
@@ -168,17 +214,19 @@ class Plot():
         d = (e[0], e[1] + side, e[2] + side);
         self.__dcube(a, b, c, d, e, f, g, h);
 
-    def point(self, pos, color=(0, 255, 0), radius=0.2):
+    def point(self, point):
         """ draw a point """
-        point = self.screen_point(*pos);
-        self.add_shape(pos, pygame.draw.circle, self.surface, color, (int(point[0]), int(point[1])), int(radius * self.x_scale));
+        p = self.screen_point(*point.point);
+        self.add_shape(point.point, pygame.draw.circle, self.surface, point.color, (int(p[0]), int(p[1])), int(0.2 * self.x_scale));
 
-    def tangent_plane(self, function, x0, y0):
+    @classmethod
+    def tangent_plane(cls, function, x0, y0):
         """ returns the function of the tangent plane to the given function at (x, y) """
         gradient = function_gradient(function)(x0, y0, 0);
         return lambda x, y: function(x0, y0) + gradient[0] * (x - x0) + gradient[1] * (y - y0);
 
-    def plane_from_3_points(self, A, B, C):
+    @classmethod
+    def plane_from_3_points(cls, A, B, C):
         """ returns the function of the plane that contains A, B, and C unless they are colinear """
         AB = (B[0] - A[0], B[1] - A[1], B[2] - A[2]);
         AC = (C[0] - A[0], C[1] - A[1], C[2] - A[2]);
@@ -186,7 +234,7 @@ class Plot():
         b = -(AB[0] * AC[2] - AB[2] * AC[0]);
         c = AB[0] * AC[1] - AB[1] * AC[0];
         x1, y1, z1 = A;
-##        print("{}(x-{}) + {}(y-{}) + {}(z-{})".format(a, x1, b, y1, c, z1));
+##        print("{}(x-{}) + {}(y-{}) + {}(z-{})".format(a, x1, b, y1, c, z1)); # print the standard form
         if c == 0: raise ValueError("Points are colinear");
         return lambda x, y: z1 - (1 / c) * (a * (x - x1) + b * (y - y1));
 
@@ -241,6 +289,7 @@ class Plot():
     def add_point(self, point):
         """ add a point to the plot """
         self.points.append(point);
+        self.needs_update = True;
 
     def add_shape(self, M, shape, *args, **kwargs):
         """ add a shape to the drawing queue """
@@ -266,10 +315,8 @@ class Plot():
             try:
                 shape.draw();
             except TypeError:
-                print(shape.args, shape.kwargs);
                 raise;
             except ValueError as e:
-                print(shape.args, shape.kwargs);
                 raise;
             except IndexError:
                 raise;
@@ -304,7 +351,7 @@ class Plot():
             self.draw_shapes();
             self.shapes = [];
 
-            if self.labels_on:
+            if self.labels_on and self.axes_on:
                 text("x", *self.screen_point(self.x_stop, 0, 0), self.surface, color=(255, 0, 0));
                 text("y", *self.screen_point(0, self.y_stop, 0), self.surface, color=(0, 255, 0));
                 text("z", *self.screen_point(0, 0, self.z_stop), self.surface, color=(0, 0, 255));
