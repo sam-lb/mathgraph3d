@@ -129,7 +129,8 @@ class Plot():
 
     def screen_point(self, x, y, z):
         """ 3D unscaled point -> pygame point """
-        return self.apply(*self.get_point_coordinates(*self.scale(x, y, z)));
+        return self.apply(*self.get_point_coordinates(x, y, z));
+        #return self.apply(*self.get_point_coordinates(*self.scale(x, y, z)));
 
     def set_alpha(self, alpha):
         """ set the alpha angle """
@@ -152,9 +153,12 @@ class Plot():
 
     def get_unit_vectors(self):
         """ project the 3D unit vectors to the 2D plane. for an explanation visit http://sambrunacini.com/algorithms.html#projection """
-        self.x = Vector(cos(self.alpha), sin(self.alpha) * sin(self.beta));
-        self.y = Vector(-sin(self.alpha), cos(self.alpha) * sin(self.beta));
-        self.z = Vector(0, cos(self.beta));
+        self.x = Vector(self.x_scale * cos(self.alpha), self.x_scale * sin(self.alpha) * sin(self.beta));
+        self.y = Vector(self.y_scale * -sin(self.alpha), self.y_scale * cos(self.alpha) * sin(self.beta));
+        self.z = Vector(0, self.z_scale * cos(self.beta));
+##        self.x = Vector(cos(self.alpha), sin(self.alpha) * sin(self.beta));
+##        self.y = Vector(-sin(self.alpha), cos(self.alpha) * sin(self.beta));
+##        self.z = Vector(0, cos(self.beta));
 
     def get_sortbox(self):
         """ gets the corner closest to the viewer to sort the polygons with """
@@ -225,6 +229,18 @@ class Plot():
         gradient = function_gradient(function)(x0, y0, 0);
         return lambda x, y: function(x0, y0) + gradient[0] * (x - x0) + gradient[1] * (y - y0);
 
+    @classmethod
+    def quadratic_approximation(cls, function, x0, y0):
+        """ returns the quadratic approximation to the given function at (x0, y0) """
+        px, py = partial_x(function), partial_y(function);
+        pxx, pxy, pyy = partial_x(px), partial_y(px), partial_y(py);
+        return lambda x, y: function(x0, y0) + px(x0, y0) * (x - x0) + py(x0, y0) * (y - y0) + 0.5 * pxx(x0, y0) * (x - x0) * (x - x0) + pxy(x0, y0) * (x - x0) * (y - y0) + 0.5 * pyy(x0, y0) * (y - y0) * (y - y0);
+
+    @classmethod
+    def nth_degree_approximation(cls, function, x0, y0, degree=3):
+        """ returns the nth degree taylor approximation to the given function at (x0, y0) """
+        return lambda x, y: sum((sum((partializer(function, i, j)(x0, y0) / (math.factorial(i) * math.factorial(j)) * (x - x0) ** i * (y - y0) ** j for j in range(degree-i+1))) for i in range(degree+1)));
+    
     @classmethod
     def plane_from_3_points(cls, A, B, C):
         """ returns the function of the plane that contains A, B, and C unless they are colinear """

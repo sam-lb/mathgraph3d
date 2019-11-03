@@ -192,12 +192,12 @@ class Plottable():
         for point in violation_points_a:
             closest_points = self.sort_by_closest(point, valid_points);
             vertices.append(self.line_constant_intersection(closest_points[0], point, z_top));
-            if len(violation_points_a) == 1: vertices.append(self.line_constant_intersection(closest_points[1], point, z_top));
+            if len(violation_points_a) == 1 and len(closest_points) > 1: vertices.append(self.line_constant_intersection(closest_points[1], point, z_top));
 
         for point in violation_points_b:
             closest_points = self.sort_by_closest(point, valid_points);
             vertices.append(self.line_constant_intersection(closest_points[0], point, z_bottom));
-            if len(violation_points_b) == 1: vertices.append(self.line_constant_intersection(closest_points[1], point, z_bottom));
+            if len(violation_points_b) == 1 and len(closest_points) > 1: vertices.append(self.line_constant_intersection(closest_points[1], point, z_bottom));
 
         return sort_clockwise(*(vertices + valid_points));
 

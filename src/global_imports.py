@@ -123,6 +123,21 @@ def function_gradient(function, step=0.001):
     return lambda x, y, z: ((function(x + step, y) - function(x, y)) / step,
                             (function(x, y + step) - function(x, y)) / step,
                             0);
+def partial_x(function, step=0.001):
+    """ take the partial derivative with respect to x """
+    return lambda x, y: (function(x + step, y) - function(x, y)) / step;
+
+def partial_y(function, step=0.001):
+    """ take the partial derivative with respect to y """
+    return lambda x, y: (function(x, y + step) - function(x, y)) / step;
+
+def partializer(function, wrt_x=3, wrt_y=0, step=0.001):
+    """ take the partial wrt x wrt_x times and wrt y wrt_y times, in that order """
+    for i in range(wrt_x):
+        function = partial_x(function, step);
+    for j in range(wrt_y):
+        function = partial_y(function, step);
+    return function;
 
 class Vector():
 

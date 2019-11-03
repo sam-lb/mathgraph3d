@@ -29,7 +29,7 @@ def on_close():
 
 def main():
     WIDTH, HEIGHT = 683, 768;
-    GUI = True;
+    GUI = False;
     TESTING = False;
 
     def on_close():
@@ -101,6 +101,10 @@ def main():
 ##    Function3D(plot, func, color_style=preset_styles["cool-blue"]);
 ##    Function3D(plot, tangent, color_style=ColorStyle(Styles.SOLID, color=(225, 225, 255)));
 ##    Function3D(plot, lambda x, y: x**2-y**2, color_style=ColorStyle(Styles.VERTICAL_STRIPED, color1=(0, 0, 0), color2=(255, 255, 255), apply_lighting=True, light_source=(0, 0, 6)));
+    func = lambda x, y: 7*x*y/math.exp(x**2/2+y**2/2);
+    #Function3D(plot, Plot.nth_degree_approximation(func, 0, 0, degree=5), color_style=preset_styles["salamence"]);
+    #Function3D(plot, Plot.quadratic_approximation(func, 0, 0), color_style=preset_styles["golf"]);
+    Function3D(plot, func, color_style=ColorStyle(Styles.SOLID, color=(255, 255, 0), apply_lighting=True, light_source=(0, 0, 6)), x_anchors=50, y_anchors=50, mesh_on=False);
 
 
     while running:
@@ -155,8 +159,8 @@ def main():
 
 
     if TESTING:
-        msg = "In __main__: without using DOUBLEBUF";
-        from performance_test import record;
+        msg = "In __main__: old projection (scaling done for every point)";
+        from performance_testing import record;
 
         record(
             {
