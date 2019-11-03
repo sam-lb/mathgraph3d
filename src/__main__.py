@@ -1,3 +1,7 @@
+"""
+MathGraph3D - 2D and 3D plotting software made with python
+"""
+
 import tkinter as tk;
 import os, sys, time, ctypes;
 from scipy.special import gamma;
@@ -18,8 +22,6 @@ ALPHA_INCREMENT, BETA_INCREMENT = 0.1, 0.1;
 INITIAL_ALPHA, INITIAL_BETA = 0.5, 0.8;
 ZOOM_FACTOR = 20;
 debug_dict = {};
-
-#print(ctypes.windll.user32.GetSystemMetrics(0), ctypes.windll.user32.GetSystemMetrics(1));
 
 
 def on_close():
