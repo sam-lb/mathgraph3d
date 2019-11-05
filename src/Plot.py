@@ -365,7 +365,6 @@ class Plot():
                 self.point(p);
 
             self.draw_shapes();
-            self.shapes = [];
 
             if self.labels_on and self.axes_on:
                 text("x", *self.screen_point(self.x_stop, 0, 0), self.surface, color=(255, 0, 0));
@@ -376,4 +375,5 @@ class Plot():
             self.updates += 1;
             self.time += time.time() - initial_time;
         pygame.display.flip();
+        self.shapes = [];
         if self.spin: self.increment_alpha(0.01);
