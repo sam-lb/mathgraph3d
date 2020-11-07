@@ -1,0 +1,12 @@
+<In __main__: old projection (scaling done for every point)>
+	Date and time of test: 2019-10-12 18:29:57.152932
+	Total time: 7.487359046936035
+	Total updates: 187
+	Average update time: 0.04003935319217131
+
+<In __main__: new projection (scaling done for unit vectors)>
+	Date and time of test: 2019-10-12 18:30:59.987117
+	Total time: 7.0717291831970215
+	Total updates: 186
+	Average update time: 0.038020049372027
+
