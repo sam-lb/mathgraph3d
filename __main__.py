@@ -66,16 +66,16 @@ def main():
         plot = Plot(screen, gui=embed);
         embed.set_plot(plot);
     else:
-        plot = Plot(screen, axes_on=True, angles_on=True, labels_on=False, tracker_on=False, spin=False, line_numbers=True, alpha=0.5, beta=0.8,
-                    x_start=-4, x_stop=4, y_start=-4, y_stop=4, z_start=-4, z_stop=4, ticks=True);
+        plot = Plot(screen, axes_on=False, angles_on=False, labels_on=False, tracker_on=False, spin=False, line_numbers=True,
+                    x_start=-16, x_stop=16, y_start=-16, y_stop=16, z_start=-16, z_stop=16, ticks=True, alpha=2.75, beta=0.35);
 
     debug_dict["plot"] = plot;
 
-    plot.add_clipping_plane(ClippingPlane(2, 3, 1, 0, 0, 0))
-    f_x = lambda u, v: (3+sin(v)+cos(u))*cos(2*v)
-    f_y = lambda u, v: (3+sin(v)+cos(u))*sin(2*v)
-    f_z = lambda u, v: sin(u)+2*cos(v)
-    ParametricFunctionUV(plot, lambda u, v: (f_x(u, v), f_y(u, v), f_z(u, v)), u_start=-math.pi, u_stop=math.pi, v_start=-math.pi, v_stop=math.pi, mesh_on=True, color_style=ColorStyle(Styles.INVNORM), u_anchors=120, v_anchors=30);
+##    plot.add_clipping_plane(ClippingPlane(2, 3, 1, 0, 0, 0))
+##    f_x = lambda u, v: (3+sin(v)+cos(u))*cos(2*v)
+##    f_y = lambda u, v: (3+sin(v)+cos(u))*sin(2*v)
+##    f_z = lambda u, v: sin(u)+2*cos(v)
+##    ParametricFunctionUV(plot, lambda u, v: (f_x(u, v), f_y(u, v), f_z(u, v)), u_start=-math.pi, u_stop=math.pi, v_start=-math.pi, v_stop=math.pi, mesh_on=True, color_style=ColorStyle(Styles.INVNORM), u_anchors=120, v_anchors=30);
 ##    CylindricalFunction(plot, lambda z, t: t/z, color_style=ColorStyle(Styles.GRADIENT, color1=(200, 100, 100), color2=(100, 100, 200)), z_anchors=70, mesh_on=False);
 ##    Function3D(plot, lambda x, y: 2*(sin(x)+sin(y)), color_style=ColorStyle(Styles.CHECKERBOARD, color1=(200, 0, 50), color2=(255, 0, 255)));
 ##    Function3D(plot, lambda x, y: sin(math.sqrt(x**2+y**2))-1, color_style=ColorStyle(Styles.SOLID, color=(255, 255, 255), apply_lighting=True, light_source=(0, 0, 4)), x_anchors=220, y_anchors=220, mesh_on=False);
@@ -109,6 +109,7 @@ def main():
 ##    Function3D(plot, lambda x, y: cos(2*pi*(1.1*x-y))+cos(2*pi*(1.2*x-y))+cos(2*pi*(1.3*x-y))+cos(2*pi*(1.4*x-y))+cos(2*pi*(1.5*x-y))+cos(2*pi*(1.6*x-y))+cos(2*pi*(1.7*x-y))+cos(2*pi*(1.8*x-y))+cos(2*pi*(1.9*x-y))+cos(2*pi*(2*x-y)),
 ##               x_anchors=100, y_anchors=100, color_style=ColorStyle(Styles.INVNORM), mesh_on=False)
 ##    ImplicitSurface(plot, lambda x, y, z: x*y*z, lambda x, y, z: 0, color_style=ColorStyle(Styles.INVNORM), cubes_per_axis=30)
+    Function3D(plot, lambda x, y: x+y*y/10 + 15*(sin(x)*sin(y))**4, color_style=ColorStyle(Styles.NORMAL_VECTOR), x_anchors=1250, y_anchors=1250, mesh_on=False)
 
 
     while running:
