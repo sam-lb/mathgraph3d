@@ -30,7 +30,7 @@ def on_close():
 
 def main():
     WIDTH, HEIGHT = 683, 600
-    GUI = False
+    GUI = True
     TESTING = False
 
     def on_close():
@@ -109,7 +109,7 @@ def main():
 ##    Function3D(plot, lambda x, y: cos(2*pi*(1.1*x-y))+cos(2*pi*(1.2*x-y))+cos(2*pi*(1.3*x-y))+cos(2*pi*(1.4*x-y))+cos(2*pi*(1.5*x-y))+cos(2*pi*(1.6*x-y))+cos(2*pi*(1.7*x-y))+cos(2*pi*(1.8*x-y))+cos(2*pi*(1.9*x-y))+cos(2*pi*(2*x-y)),
 ##               x_anchors=100, y_anchors=100, color_style=ColorStyle(Styles.INVNORM), mesh_on=False)
 ##    ImplicitSurface(plot, lambda x, y, z: x*y*z, lambda x, y, z: 0, color_style=ColorStyle(Styles.INVNORM), cubes_per_axis=30)
-    Function3D(plot, lambda x, y: x+y*y/10 + 15*(sin(x)*sin(y))**4, color_style=ColorStyle(Styles.NORMAL_VECTOR), x_anchors=1250, y_anchors=1250, mesh_on=False)
+    Function3D(plot, lambda x, y: x+y*y/10 + 15*(sin(x)*sin(y))**4, color_style=ColorStyle(Styles.NORMAL_VECTOR), x_anchors=50, y_anchors=50, mesh_on=False)
 
 
     while running:

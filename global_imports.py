@@ -5,7 +5,7 @@ from random import randint;
 from decimal import Decimal;
 
 pygame.font.init();
-font = pygame.font.SysFont("arial", 32);
+font = pygame.font.SysFont("arial", 32)
 
 ALLOWED_FUNCTIONS = {
     "sin": sin, "cos": cos, "tan": tan, "sqrt": sqrt,
