@@ -8,4 +8,8 @@ There is lots of information (and a download link) about this project on my webs
 It's also available for download [on itch.io](https://sam-brunacini.itch.io/mathgraph3d).
 The web version is also available [on my website](http://plotter.sambrunacini.com/).
 
-You can contact me at pythongrapheremail@gmail.com
+For MathGraph3D support, email pythongrapheremail@gmail.com
+
+## Gallery
+
+![Example 1](https://github.com/sam-lb/mathgraph3d/blob/master/img/04B479C6-05E8-4B72-8213-DBF1C7E101CD.png)
