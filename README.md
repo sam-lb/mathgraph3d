@@ -19,3 +19,5 @@ For MathGraph3D support, email pythongrapheremail@gmail.com
 ![Example 4](https://github.com/sam-lb/mathgraph3d/blob/master/img/DD38F411-3465-4BA3-95C2-490C1EF1FD16.png)
 
 ![Example 5](https://github.com/sam-lb/mathgraph3d/blob/master/img/F780BF26-1A43-4AA6-A0B7-0737DED034C0.jpeg)
+
+![Example 6](https://github.com/sam-lb/mathgraph3d/blob/master/img/F780BF26-1A43-4AA6-A0B7-0737DED034C0.jpeg)
