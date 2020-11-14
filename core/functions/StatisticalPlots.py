@@ -2,7 +2,7 @@ from mathgraph3D.core.global_imports import *;
 from mathgraph3D.core.Color import preset_styles, ColorStyle, Styles;
 from csv import reader;
 from collections import defaultdict;
-from mathgraph3D.core.Shapes import SubPolygon;
+from mathgraph3D.core.plot.Shapes import SubPolygon;
 from mathgraph3D.core.Errors import GrapherError;
 
 

@@ -1,7 +1,7 @@
 from mathgraph3D.core.global_imports import *;
-from mathgraph3D.core.Plottable import Plottable;
+from mathgraph3D.core.functions.Plottable import Plottable;
 from mathgraph3D.core.Color import preset_styles;
-from mathgraph3D.core.Shapes import SubPolygon;
+from mathgraph3D.core.plot.Shapes import SubPolygon;
 from math import isnan, isinf;
 from warnings import filterwarnings;
 

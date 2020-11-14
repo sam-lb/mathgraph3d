@@ -1,13 +1,13 @@
 from mathgraph3D.core.global_imports import *;
 from CAS.Parser import Parser;
 from CAS.Errors import UserError;
-from mathgraph3D.core.Shapes import Shape;
+from mathgraph3D.core.plot.Shapes import Shape;
 from mathgraph3D.core.Color import ColorStyle, Styles, preset_styles;
-from mathgraph3D.core.CartesianFunctions import Function2D, Function3D;
-from mathgraph3D.core.ParametricFunctions import ParametricFunctionT, ParametricFunctionUV, RevolutionSurface;
-from mathgraph3D.core.VectorFunctions import VectorField;
-from mathgraph3D.core.OtherCoordinateSystems import CylindricalFunction, SphericalFunction;
-from mathgraph3D.core.ImplicitPlots import ImplicitSurface
+from mathgraph3D.core.functions.CartesianFunctions import Function2D, Function3D;
+from mathgraph3D.core.functions.ParametricFunctions import ParametricFunctionT, ParametricFunctionUV, RevolutionSurface;
+from mathgraph3D.core.functions.VectorFunctions import VectorField;
+from mathgraph3D.core.functions.OtherCoordinateSystems import CylindricalFunction, SphericalFunction;
+from mathgraph3D.core.functions.ImplicitPlots import ImplicitSurface
 ##import numpy as np;
 
 import time;

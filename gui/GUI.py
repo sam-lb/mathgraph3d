@@ -6,16 +6,16 @@ from CAS import Manipulator, Parser
 from CAS.Errors import UserError
 from mathgraph3D.core.Color import Styles, ColorStyle, preset_styles
 
-from mathgraph3D.core.CartesianFunctions import Function2D, Function3D
-from mathgraph3D.core.ParametricFunctions import ParametricFunctionT, ParametricFunctionUV, RevolutionSurface
-from mathgraph3D.core.VectorFunctions import VectorField
-from mathgraph3D.core.StatisticalPlots import StatPlot2D, StatPlot3D
-from mathgraph3D.core.OtherCoordinateSystems import CylindricalFunction, SphericalFunction, PolarFunction
-from mathgraph3D.core.ImplicitPlots import ImplicitPlot2D
-from mathgraph3D.core.ComplexFunctions import ComplexFunction
-from mathgraph3D.core.RecurrenceRelation import RecurrenceRelation
-from mathgraph3D.core.Point import Point
-from mathgraph3D.core.Plot import Plot
+from mathgraph3D.core.functions.CartesianFunctions import Function2D, Function3D
+from mathgraph3D.core.functions.ParametricFunctions import ParametricFunctionT, ParametricFunctionUV, RevolutionSurface
+from mathgraph3D.core.functions.VectorFunctions import VectorField
+from mathgraph3D.core.functions.StatisticalPlots import StatPlot2D, StatPlot3D
+from mathgraph3D.core.functions.OtherCoordinateSystems import CylindricalFunction, SphericalFunction, PolarFunction
+from mathgraph3D.core.functions.ImplicitPlots import ImplicitPlot2D
+from mathgraph3D.core.functions.ComplexFunctions import ComplexFunction
+from mathgraph3D.core.functions.RecurrenceRelation import RecurrenceRelation
+from mathgraph3D.core.plot.Point import Point
+from mathgraph3D.core.plot.Plot import Plot
 from mathgraph3D.core.Errors import GrapherError
 
 from pygame import Color

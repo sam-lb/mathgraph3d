@@ -1,6 +1,6 @@
 from mathgraph3D.core.global_imports import *;
 from mathgraph3D.core.Color import preset_styles, random_color;
-from mathgraph3D.core.Shapes import SubPolygon;
+from mathgraph3D.core.plot.Shapes import SubPolygon;
 import warnings;
 warnings.filterwarnings("error");
 

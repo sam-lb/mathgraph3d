@@ -3,16 +3,16 @@ import os, sys, time, ctypes
 from scipy.special import gamma
 from mathgraph3D.core.global_imports import *
 from mathgraph3D.core.Color import ColorStyle, Styles, Gradient, preset_styles, random_color
-from mathgraph3D.core.CartesianFunctions import Function2D, Function3D
-from mathgraph3D.core.ParametricFunctions import ParametricFunctionT, ParametricFunctionUV, RevolutionSurface
-from mathgraph3D.core.VectorFunctions import VectorField
-from mathgraph3D.core.StatisticalPlots import StatPlot2D, StatPlot3D
-from mathgraph3D.core.OtherCoordinateSystems import CylindricalFunction, SphericalFunction, PolarFunction
-from mathgraph3D.core.ImplicitPlots import ImplicitPlot2D, ImplicitSurface
-from mathgraph3D.core.ComplexFunctions import ComplexFunction
-from mathgraph3D.core.RecurrenceRelation import RecurrenceRelation
-from mathgraph3D.core.ClippingPlane import ClippingPlane
-from mathgraph3D.core.Plot import Plot
+from mathgraph3D.core.functions.CartesianFunctions import Function2D, Function3D
+from mathgraph3D.core.functions.ParametricFunctions import ParametricFunctionT, ParametricFunctionUV, RevolutionSurface
+from mathgraph3D.core.functions.VectorFunctions import VectorField
+from mathgraph3D.core.functions.StatisticalPlots import StatPlot2D, StatPlot3D
+from mathgraph3D.core.functions.OtherCoordinateSystems import CylindricalFunction, SphericalFunction, PolarFunction
+from mathgraph3D.core.functions.ImplicitPlots import ImplicitPlot2D, ImplicitSurface
+from mathgraph3D.core.functions.ComplexFunctions import ComplexFunction
+from mathgraph3D.core.functions.RecurrenceRelation import RecurrenceRelation
+from mathgraph3D.core.plot.ClippingPlane import ClippingPlane
+from mathgraph3D.core.plot.Plot import Plot
 from mathgraph3D.gui.GUI import Interface
 
 ALPHA_INCREMENT, BETA_INCREMENT = 0.1, 0.1;
@@ -109,7 +109,7 @@ def main():
 ##    Function3D(plot, lambda x, y: cos(2*pi*(1.1*x-y))+cos(2*pi*(1.2*x-y))+cos(2*pi*(1.3*x-y))+cos(2*pi*(1.4*x-y))+cos(2*pi*(1.5*x-y))+cos(2*pi*(1.6*x-y))+cos(2*pi*(1.7*x-y))+cos(2*pi*(1.8*x-y))+cos(2*pi*(1.9*x-y))+cos(2*pi*(2*x-y)),
 ##               x_anchors=100, y_anchors=100, color_style=ColorStyle(Styles.INVNORM), mesh_on=False)
 ##    ImplicitSurface(plot, lambda x, y, z: x*y*z, lambda x, y, z: 0, color_style=ColorStyle(Styles.INVNORM), cubes_per_axis=30)
-    Function3D(plot, lambda x, y: x+y*y/10 + 15*(sin(x)*sin(y))**4, color_style=ColorStyle(Styles.NORMAL_VECTOR), x_anchors=50, y_anchors=50, mesh_on=False)
+##    Function3D(plot, lambda x, y: x+y*y/10 + 15*(sin(x)*sin(y))**4, color_style=ColorStyle(Styles.NORMAL_VECTOR), x_anchors=50, y_anchors=50, mesh_on=False)
 
 
     while running:

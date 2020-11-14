@@ -1,5 +1,5 @@
 from mathgraph3D.core.global_imports import *;
-from mathgraph3D.core.Plottable import Plottable;
+from mathgraph3D.core.functions.Plottable import Plottable;
 from mathgraph3D.core.Color import preset_styles, ColorStyle, Styles;
 
 
