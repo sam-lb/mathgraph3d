@@ -1,4 +1,4 @@
-from mathgraph3D.global_imports import *;
+from mathgraph3D.core.global_imports import *;
 
 
 class Segment():

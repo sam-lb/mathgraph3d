@@ -1,9 +1,9 @@
-from mathgraph3D.global_imports import *;
-from mathgraph3D.Color import preset_styles, ColorStyle, Styles;
+from mathgraph3D.core.global_imports import *;
+from mathgraph3D.core.Color import preset_styles, ColorStyle, Styles;
 from csv import reader;
 from collections import defaultdict;
-from mathgraph3D.Shapes import SubPolygon;
-from mathgraph3D.Errors import GrapherError;
+from mathgraph3D.core.Shapes import SubPolygon;
+from mathgraph3D.core.Errors import GrapherError;
 
 
 def load_csv(file_name, desperation=False):

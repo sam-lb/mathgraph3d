@@ -2,26 +2,25 @@ import tkinter as tk
 import webbrowser
 from tkinter.colorchooser import askcolor
 from tkinter.messagebox import showinfo
-from Color import preset_styles
 from CAS import Manipulator, Parser
 from CAS.Errors import UserError
-from mathgraph3D.Color import Styles, ColorStyle, preset_styles
+from mathgraph3D.core.Color import Styles, ColorStyle, preset_styles
 
-from mathgraph3D.CartesianFunctions import Function2D, Function3D
-from mathgraph3D.ParametricFunctions import ParametricFunctionT, ParametricFunctionUV, RevolutionSurface
-from mathgraph3D.VectorFunctions import VectorField
-from mathgraph3D.StatisticalPlots import StatPlot2D, StatPlot3D
-from mathgraph3D.OtherCoordinateSystems import CylindricalFunction, SphericalFunction, PolarFunction
-from mathgraph3D.ImplicitPlots import ImplicitPlot2D
-from mathgraph3D.ComplexFunctions import ComplexFunction
-from mathgraph3D.RecurrenceRelation import RecurrenceRelation
-from mathgraph3D.Point import Point
-from mathgraph3D.Plot import Plot
-from mathgraph3D.Errors import GrapherError
+from mathgraph3D.core.CartesianFunctions import Function2D, Function3D
+from mathgraph3D.core.ParametricFunctions import ParametricFunctionT, ParametricFunctionUV, RevolutionSurface
+from mathgraph3D.core.VectorFunctions import VectorField
+from mathgraph3D.core.StatisticalPlots import StatPlot2D, StatPlot3D
+from mathgraph3D.core.OtherCoordinateSystems import CylindricalFunction, SphericalFunction, PolarFunction
+from mathgraph3D.core.ImplicitPlots import ImplicitPlot2D
+from mathgraph3D.core.ComplexFunctions import ComplexFunction
+from mathgraph3D.core.RecurrenceRelation import RecurrenceRelation
+from mathgraph3D.core.Point import Point
+from mathgraph3D.core.Plot import Plot
+from mathgraph3D.core.Errors import GrapherError
 
 from pygame import Color
 from pprint import pprint
-from mathgraph3D.global_imports import ALLOWED_FUNCTIONS, ALLOWED_COMPLEX_FUNCTIONS
+from mathgraph3D.core.global_imports import ALLOWED_FUNCTIONS, ALLOWED_COMPLEX_FUNCTIONS
 
 
 numerical_parser = Parser(ALLOWED_FUNCTIONS);

@@ -1,5 +1,5 @@
-from mathgraph3D.global_imports import Vector, relative_distance, sort_clockwise
-from mathgraph3D.Shapes import SubPolygon
+from mathgraph3D.core.global_imports import Vector, relative_distance, sort_clockwise
+from mathgraph3D.core.Shapes import SubPolygon
 
 
 class ClippingPlane:

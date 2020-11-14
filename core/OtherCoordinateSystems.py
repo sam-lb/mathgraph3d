@@ -1,7 +1,7 @@
-from mathgraph3D.global_imports import *;
-from mathgraph3D.Color import preset_styles, Styles, ColorStyle;
-from mathgraph3D.Plottable import Plottable;
-from mathgraph3D.ParametricFunctions import ParametricFunctionUV;
+from mathgraph3D.core.global_imports import *;
+from mathgraph3D.core.Color import preset_styles, Styles, ColorStyle;
+from mathgraph3D.core.Plottable import Plottable;
+from mathgraph3D.core.ParametricFunctions import ParametricFunctionUV;
 
 
 class CylindricalFunction(ParametricFunctionUV):
