@@ -441,7 +441,7 @@ class GraphObject:
 
     def build_object(self):
         """ Create a graph object to be added to the plot """
-        # Que Daniel Schiffman's "I will refactor this later"
+        # Que Daniel Shiffman's "I will refactor this later"
         color_style = self.build_ColorStyle();
         plot = self.parent.plot;
 
